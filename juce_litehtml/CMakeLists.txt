@@ -1,0 +1,18 @@
+add_library(litehtml STATIC)
+
+file(GLOB_RECURSE src
+    ${CMAKE_CURRENT_SOURCE_DIR}/litehtml/include/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/litehtml/src/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/litehtml/src/*.cpp
+)
+
+target_include_directories(litehtml
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/litehtml/include
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/litehtml/include/litehtml
+        ${CMAKE_CURRENT_SOURCE_DIR}/litehtml/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/litehtml/src/gumbo/include
+)
+
+target_sources(litehtml ${src})
