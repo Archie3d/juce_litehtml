@@ -23,4 +23,9 @@ if(MSVC)
     )
 endif()
 
+target_compile_definitions(litehtml
+    PUBLIC
+        LITEHTML_UTF8=1
+)
+
 target_sources(litehtml PRIVATE ${src})

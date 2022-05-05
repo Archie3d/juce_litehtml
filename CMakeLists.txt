@@ -11,3 +11,4 @@ target_include_directories(juce_quickjs INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/ju
 target_include_directories(juce_litehtml INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/juce_litehtml)
 
 target_link_libraries(juce_quickjs INTERFACE quickjs)
+target_link_libraries(juce_litehtml INTERFACE litehtml)

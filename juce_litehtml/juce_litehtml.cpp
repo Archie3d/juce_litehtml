@@ -3,3 +3,9 @@
 #endif
 
 #include "juce_litehtml.h"
+
+using namespace juce;
+
+#include "webengine/webview.cpp"
+#include "webengine/webpage.cpp"
+#include "webengine/loader.cpp"
