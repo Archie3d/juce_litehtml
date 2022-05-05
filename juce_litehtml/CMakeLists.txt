@@ -13,6 +13,14 @@ target_include_directories(litehtml
         ${CMAKE_CURRENT_SOURCE_DIR}/litehtml/include/litehtml
         ${CMAKE_CURRENT_SOURCE_DIR}/litehtml/src
         ${CMAKE_CURRENT_SOURCE_DIR}/litehtml/src/gumbo/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/litehtml/src/gumbo/include/gumbo
 )
 
-target_sources(litehtml ${src})
+if(MSVC)
+    target_include_directories(litehtml
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/litehtml/src/gumbo/visualc/include
+    )
+endif()
+
+target_sources(litehtml PRIVATE ${src})

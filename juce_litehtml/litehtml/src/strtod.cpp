@@ -1,4 +1,4 @@
-/* 
+/*
  * strtod.c --
  *
  *	Source code for the "strtod" library procedure.
@@ -21,7 +21,8 @@
 #include <cstdlib>
 #include <cctype>
 #include <cerrno>
-extern  int     errno;
+
+//extern int errno;
 
 #ifndef TRUE
 #define TRUE 1
@@ -139,7 +140,7 @@ double litehtml::t_strtod(const litehtml::tchar_t* string, litehtml::tchar_t** e
      * If the mantissa has more than 18 digits, ignore the extras, since
      * they can't affect the value anyway.
      */
-    
+
     pExp  = p;
     p -= mantSize;
     if (decPt < 0)
@@ -232,7 +233,7 @@ double litehtml::t_strtod(const litehtml::tchar_t* string, litehtml::tchar_t** e
      * many powers of 2 of 10. Then combine the exponent with the
      * fraction.
      */
-    
+
     if (exp < 0)
     {
 	    expSign = TRUE;
