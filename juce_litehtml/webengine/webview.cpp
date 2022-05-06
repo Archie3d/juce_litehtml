@@ -9,7 +9,7 @@ static Colour webColour (const web_color& c)
     return Colour (c.red, c.green, c.blue, c.alpha);
 }
 
-static String tcharString (const tchar_t* s)
+static String juceString (const tchar_t* s)
 {
 #ifdef LITEHTML_UTF8
     return String::fromUTF8 (s);
@@ -18,7 +18,7 @@ static String tcharString (const tchar_t* s)
 #endif
 }
 
-static String tstringString (const tstring& s)
+static String juceString (const tstring& s)
 {
     return String (s.c_str());
 }
@@ -39,7 +39,7 @@ public:
                           unsigned int decoration,
                           font_metrics* fm) override
     {
-        String fontName { tcharString (faceName) };
+        String fontName { juceString (faceName) };
         int styleFlags { Font::plain };
 
         if (decoration & font_decoration_underline)
@@ -72,7 +72,7 @@ public:
     int text_width (const tchar_t* text, uint_ptr hFont) override
     {
         if (auto* font { static_cast<Font*>((void*) hFont) })
-            return font->getStringWidth (tcharString (text));
+            return font->getStringWidth (juceString (text));
 
         return 0;
     }
@@ -87,7 +87,7 @@ public:
             g->setColour (webColour (color));
 
             Rectangle<int> rect (pos.x, pos.y, pos.width, pos.height);
-            g->drawText (tcharString (text), rect, Justification::left);
+            g->drawText (juceString (text), rect, Justification::left);
         }
     }
 
@@ -139,7 +139,7 @@ public:
     {
         if (auto* loader { getLoader() })
         {
-            String url (tcharString (src));
+            String url (juceString (src));
 
             auto image { loader->loadImage (url) };
 
@@ -159,7 +159,7 @@ public:
     {
         if (auto* loader { getLoader() })
         {
-            String url (tcharString (src));
+            String url (juceString (src));
             auto image { loader->loadImage (url) };
 
             if (! image.isNull())
@@ -192,7 +192,7 @@ public:
             }
             else if (auto* loader { getLoader() })
             {
-                auto image { loader->loadImage (tstringString (bg.image)) };
+                auto image { loader->loadImage (juceString (bg.image)) };
 
                 if (!image.isNull())
                 {
@@ -270,7 +270,7 @@ public:
     {
         if (auto* loader { getLoader() })
         {
-            const String sUrl (tcharString (base_url));
+            const String sUrl (juceString (base_url));
             loader->setBaseURL (sUrl);
         }
     }
@@ -282,7 +282,7 @@ public:
 
     void on_anchor_click (const tchar_t* url, const litehtml::element::ptr& el) override
     {
-        String sUrl (tcharString (url));
+        String sUrl (juceString (url));
         sUrl = sUrl.trim();
 
         // @todo Navigate to the clicked URL
@@ -299,7 +299,7 @@ public:
         };
 
         auto cur { MouseCursor::NormalCursor };
-        const String cursorName { tcharString (cursor).toLowerCase().trim() };
+        const String cursorName { juceString (cursor).toLowerCase().trim() };
 
         if (const auto it { cursorTypes.find (cursorName) }; it != cursorTypes.end())
             cur = it->second;
@@ -310,7 +310,7 @@ public:
 
     void transform_text (litehtml::tstring& text, litehtml::text_transform tt) override
     {
-        String str { tcharString (text.c_str()) };
+        String str { juceString (text.c_str()) };
 
         switch (tt)
         {
@@ -395,7 +395,7 @@ public:
 
     tstring resolve_color (const tstring &color) const override
     {
-        String colorName { tcharString (color.c_str()) };
+        String colorName { juceString (color.c_str()) };
 
         Colour c { Colours::findColourForName (colorName, Colour::fromString (colorName)) };
         String strColour = String ("#") + c.toDisplayString (true);
@@ -422,17 +422,35 @@ private:
 
 //==============================================================================
 
-struct WebView::Impl : public WebPage::Listener
+constexpr static int scrollBarSize { 10 };
+
+struct WebView::Impl : public WebPage::Listener,
+                       public ScrollBar::Listener
 {
     WebView& self;
     Renderer renderer;
     WebPage* page { nullptr };
     litehtml::document::ptr document { nullptr };
 
+    ScrollBar vScrollBar;
+    ScrollBar hScrollBar;
+    int scrollX { 0 };
+    int scrollY { 0 };
+
     Impl (WebView& wv)
         : self { wv },
-          renderer (wv)
+          renderer (wv),
+          vScrollBar (true),
+          hScrollBar (false)
     {
+        vScrollBar.setAutoHide (false);
+        hScrollBar.setAutoHide (false);
+
+        self.addAndMakeVisible (vScrollBar);
+        self.addAndMakeVisible (hScrollBar);
+
+        vScrollBar.addListener (this);
+        hScrollBar.addListener (this);
     }
 
     void setPage (WebPage* newPage)
@@ -459,7 +477,27 @@ struct WebView::Impl : public WebPage::Listener
             return;
 
         const auto width { self.getWidth() };
+        const auto height { self.getHeight() };
+
         document->render (width, litehtml::render_all);
+
+        const auto documentWidth { document->width() };
+        const auto documentHeight { document->height() };
+
+        const auto hRange { jmax (0, documentWidth - width) };
+        const auto vRange { jmax (0, documentHeight - height) };
+
+        hScrollBar.setVisible (hRange > 0);
+        vScrollBar.setVisible (vRange > 0);
+
+        hScrollBar.setRangeLimits (0, documentWidth, dontSendNotification);
+        vScrollBar.setRangeLimits (0, documentHeight, dontSendNotification);
+
+        hScrollBar.setCurrentRange (scrollX, width - (vRange > 0 ? scrollBarSize : 0));
+        vScrollBar.setCurrentRange (scrollY, height - (hRange > 0 ? scrollBarSize : 0));
+
+        hScrollBar.setBounds(0, height - scrollBarSize, vRange > 0 ? width - scrollBarSize : width, scrollBarSize);
+        vScrollBar.setBounds(width - scrollBarSize, 0, scrollBarSize, hRange > 0 ? height - scrollBarSize : height);
     }
 
     void paint (Graphics& g)
@@ -470,10 +508,13 @@ struct WebView::Impl : public WebPage::Listener
         if (document == nullptr)
             return;
 
-        litehtml::position clip (0, 0, self.getWidth(), self.getHeight());
+        const auto width { vScrollBar.isVisible() ? self.getWidth() - vScrollBar.getWidth() : self.getWidth() };
+        const auto height { hScrollBar.isVisible() ? self.getHeight() - hScrollBar.getHeight() : self.getHeight() };
 
-        // @todo Use scroll position for drawing
-        document->draw ((litehtml::uint_ptr)&g, 0, 0, &clip);
+        litehtml::position clip (0, 0, width, height);
+
+        // Draw document at scroll position
+        document->draw ((litehtml::uint_ptr)&g, -scrollX, -scrollY, &clip);
     }
 
     // WebPage::Listener
@@ -481,6 +522,17 @@ struct WebView::Impl : public WebPage::Listener
     {
         document = page->getDocument();
         self.resized();
+    }
+
+    // ScrollBar::Listener
+    void scrollBarMoved (ScrollBar* scrollBar, double newRangeStart)
+    {
+        if (scrollBar == &vScrollBar)
+            scrollY = (int)newRangeStart;
+        else if (scrollBar == &hScrollBar)
+            scrollX = (int)newRangeStart;
+
+        self.repaint();
     }
 
 };
