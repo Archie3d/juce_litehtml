@@ -7,8 +7,9 @@ struct WebPage::Impl
     WebLoader loader;
     litehtml::context context;
     litehtml::document::ptr document { nullptr };
+    litehtml::document_container* renderer { nullptr };
 
-    WebView* view { nullptr };
+    ListenerList<WebPage::Listener> listeners;
 
     Impl()
     {
@@ -17,38 +18,37 @@ struct WebPage::Impl
 
     void loadFromURL (const URL& url)
     {
-        if (view == nullptr)
+        if (renderer == nullptr)
             return;
 
+        loader.setBaseURL (url);
         const auto html { loader.loadText (url) };
         loadFromHTML (html);
     }
 
     void loadFromHTML (const String& html)
     {
-        if (view == nullptr)
+        if (renderer == nullptr)
             return;
 
-        document = litehtml::document::createFromUTF8 (html.toRawUTF8(), &view->getRenderer(), &context);
-        view->setDocument (document);
+        document = litehtml::document::createFromUTF8 (html.toRawUTF8(), renderer, &context);
+        notifyDocumentLoaded();
+    }
+
+    void notifyDocumentLoaded()
+    {
+        listeners.call([](Listener& listener) { listener.documentLoaded(); });
     }
 };
 
 //==============================================================================
 
-WebPage::WebPage (WebView* view)
+WebPage::WebPage()
     : d { std::make_unique<Impl>() }
 {
-    if (view != nullptr)
-        setView (view);
 }
 
 WebPage::~WebPage() = default;
-
-void WebPage::setView (WebView* view)
-{
-    d->view = view;
-}
 
 void WebPage::loadFromURL (const URL& url)
 {
@@ -58,6 +58,31 @@ void WebPage::loadFromURL (const URL& url)
 void WebPage::loadFromHTML (const String& html)
 {
     d->loadFromHTML (html);
+}
+
+void WebPage::addListener (Listener* listener)
+{
+    d->listeners.add (listener);
+}
+
+void WebPage::removeListener (Listener* listener)
+{
+    d->listeners.remove (listener);
+}
+
+litehtml::document::ptr WebPage::getDocument()
+{
+    return d->document;
+}
+
+WebLoader& WebPage::getLoader()
+{
+    return d->loader;
+}
+
+void WebPage::setRenderer (litehtml::document_container* renderer)
+{
+    d->renderer = renderer;
 }
 
 } // namespace juce_litehtml

@@ -24,27 +24,50 @@ WebLoader::WebLoader()
 {
 }
 
+void WebLoader::setBaseURL (const URL& url)
+{
+    if (url.getFileName().isEmpty())
+        baseURL = url;
+    else
+        baseURL = url.getParentURL();
+}
+
 String WebLoader::loadText (const URL& url)
 {
-    const auto scheme { url.getScheme() };
+    const auto fixedUrl { fixUpURL (url) };
+    const auto scheme { fixedUrl.getScheme() };
 
     if (scheme == "res")
-        return loadTextFromResource (url.getFileName());
+        return loadTextFromResource (fixedUrl.getFileName());
 
-    return url.readEntireTextStream (false);
+    return fixedUrl.readEntireTextStream (false);
 }
 
 Image WebLoader::loadImage (const URL& url)
 {
-    const auto scheme { url.getScheme() };
+    const auto fixedUrl { fixUpURL (url) };
+    const auto scheme { fixedUrl.getScheme() };
 
     if (scheme == "res")
-        return loadImageFromResource (url.getFileName());
+        return loadImageFromResource (fixedUrl.getFileName());
 
-    if (url.isLocalFile())
-        return loadImageFromFile (url.getLocalFile());
+    if (fixedUrl.isLocalFile())
+        return loadImageFromFile (fixedUrl.getLocalFile());
 
     return {};
+}
+
+URL WebLoader::fixUpURL (const URL& url) const
+{
+    if (url.getScheme().isEmpty())
+    {
+        if (const auto subPath { url.getSubPath() }; subPath.isNotEmpty())
+            return baseURL.getChildURL (subPath);
+
+        return baseURL.getChildURL (url.getFileName());
+    }
+
+    return url;
 }
 
 String WebLoader::loadTextFromResource (const String& resName)

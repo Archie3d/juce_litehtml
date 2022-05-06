@@ -18,6 +18,11 @@ static String tcharString (const tchar_t* s)
 #endif
 }
 
+static String tstringString (const tstring& s)
+{
+    return String (s.c_str());
+}
+
 //==============================================================================
 
 class Renderer final : public litehtml::document_container
@@ -132,27 +137,41 @@ public:
 
     void load_image (const tchar_t* src, const tchar_t* baseurl, bool redraw_on_ready) override
     {
-        String url (tcharString (src));
-
-        Image image;
-        //auto image = loader->loadImage (url);
-
-        if (redraw_on_ready && !image.isNull())
+        if (auto* loader { getLoader() })
         {
-            // @todo Handle asynchronous load.
+            String url (tcharString (src));
+
+            auto image { loader->loadImage (url) };
+
+            if (! image.isNull())
+            {
+                // @todo Add image to cache (to cache its size);
+            }
+
+            if (redraw_on_ready && !image.isNull())
+            {
+                // @todo Handle asynchronous load.
+            }
         }
     }
 
     void get_image_size (const tchar_t* src, const tchar_t* baseurl, litehtml::size& sz) override
     {
-        String url (tcharString (src));
-        Image image;
-        //auto image = loader->loadImage (url);
-
-        if (! image.isNull())
+        if (auto* loader { getLoader() })
         {
-            sz.width = image.getWidth();
-            sz.height = image.getHeight();
+            String url (tcharString (src));
+            auto image { loader->loadImage (url) };
+
+            if (! image.isNull())
+            {
+                sz.width = image.getWidth();
+                sz.height = image.getHeight();
+            }
+            else
+            {
+                sz.width = 0;
+                sz.height = 0;
+            }
         }
     }
 
@@ -171,10 +190,9 @@ public:
                 g->setColour (webColour (bg.color));
                 g->fillRect (rect);
             }
-            else if (false /* loader != nullptr */)
+            else if (auto* loader { getLoader() })
             {
-                Image image;
-                // auto image = loader->loadImage (tcharString (bg.image));
+                auto image { loader->loadImage (tstringString (bg.image)) };
 
                 if (!image.isNull())
                 {
@@ -250,7 +268,11 @@ public:
 
     void set_base_url (const tchar_t* base_url) override
     {
-        // @todo Update page base URL
+        if (auto* loader { getLoader() })
+        {
+            const String sUrl (tcharString (base_url));
+            loader->setBaseURL (sUrl);
+        }
     }
 
     void link (const std::shared_ptr<litehtml::document>& doc, const litehtml::element::ptr& el) override
@@ -385,23 +407,50 @@ public:
     #endif
     }
 
-
 private:
+
+    WebLoader* getLoader()
+    {
+        if (auto* page { webView.getPage() })
+            return &page->getLoader();
+
+        return nullptr;
+    }
+
     WebView& webView;
 };
 
 //==============================================================================
 
-struct WebView::Impl
+struct WebView::Impl : public WebPage::Listener
 {
     WebView& self;
     Renderer renderer;
+    WebPage* page { nullptr };
     litehtml::document::ptr document { nullptr };
 
     Impl (WebView& wv)
         : self { wv },
           renderer (wv)
     {
+    }
+
+    void setPage (WebPage* newPage)
+    {
+        if (page != nullptr)
+        {
+            page->removeListener (this);
+            page->setRenderer (nullptr);
+        }
+
+        page = newPage;
+
+        if (page != nullptr)
+        {
+            page->addListener (this);
+            page->setRenderer (&renderer);
+            document = page->getDocument();
+        }
     }
 
     void render()
@@ -411,9 +460,6 @@ struct WebView::Impl
 
         const auto width { self.getWidth() };
         document->render (width, litehtml::render_all);
-
-        DBG("WIDTH: " << String (document->width()));
-        DBG("HEIGHT: " << String (document->height()));
     }
 
     void paint (Graphics& g)
@@ -430,6 +476,13 @@ struct WebView::Impl
         document->draw ((litehtml::uint_ptr)&g, 0, 0, &clip);
     }
 
+    // WebPage::Listener
+    void documentLoaded()
+    {
+        document = page->getDocument();
+        self.resized();
+    }
+
 };
 
 //==============================================================================
@@ -441,15 +494,14 @@ WebView::WebView()
 
 WebView::~WebView() = default;
 
-void WebView::setDocument (litehtml::document::ptr doc)
+void WebView::setPage(WebPage* page)
 {
-    d->document = doc;
-    resized();
+    d->setPage (page);
 }
 
-litehtml::document_container& WebView::getRenderer() noexcept
+WebPage* WebView::getPage()
 {
-    return d->renderer;
+    return d->page;
 }
 
 void WebView::paint (Graphics& g)

@@ -1,9 +1,11 @@
 #pragma once
 
-#include "litehtml.h"
-
 namespace juce_litehtml {
 
+/** Web page view.
+
+    This component visualizes a web page associated with it.
+*/
 class WebView : public juce::Component
 {
 public:
@@ -11,14 +13,14 @@ public:
     WebView();
     ~WebView();
 
+    void setPage (WebPage* page);
+    WebPage* getPage();
+
+    // juce::Component
     void paint (juce::Graphics& g) override;
     void resized() override;
 
-    void setDocument (litehtml::document::ptr doc);
-    litehtml::document_container& getRenderer() noexcept;
-
 private:
-
     struct Impl;
     std::unique_ptr<Impl> d;
 
