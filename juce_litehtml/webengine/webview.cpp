@@ -142,19 +142,19 @@ public:
     {
         if (auto* loader { getLoader() })
         {
-            String url (juceString (src));
+            const URL url (juceString (src));
 
-            auto image { loader->loadImage (url) };
-
-            if (! image.isNull())
-            {
-                // @todo Add image to cache (to cache its size);
-            }
-
-            if (redraw_on_ready && !image.isNull())
-            {
-                // @todo Handle asynchronous load.
-            }
+            loader->loadAsync<Image> (url, [this, url, redraw_on_ready](bool ok, const Image& image) {
+                if (ok && ! image.isNull())
+                {
+                    // Cache image size
+                    imageSizeCache[url.toString (true).hash()] = { image.getWidth(), image.getHeight() };
+                    
+                    if (redraw_on_ready)
+                        webView.resized();
+                        webView.repaint();
+                }
+            });
         }
     }
 
@@ -162,20 +162,29 @@ public:
     {
         if (auto* loader { getLoader() })
         {
-            String url (juceString (src));
-            auto image { loader->loadImage (url) };
+            URL url (juceString (src));
 
-            if (! image.isNull())
+            if (auto it { imageSizeCache.find (url.toString (true).hash()) }; it != imageSizeCache.end())
+            {
+                sz.width = it->second.width;
+                sz.height = it->second.height;
+                return;
+            }
+
+            // Image has not been cached, force local load
+            Image image{};
+            const bool ok { loader->loadLocal (url, image) };
+
+            if (ok && ! image.isNull())
             {
                 sz.width = image.getWidth();
                 sz.height = image.getHeight();
-            }
-            else
-            {
-                sz.width = 0;
-                sz.height = 0;
+                return;
             }
         }
+
+        sz.width = 0;
+        sz.height = 0;
     }
 
     void draw_background (uint_ptr hdc, const background_paint &bg) override
@@ -195,9 +204,11 @@ public:
             }
             else if (auto* loader { getLoader() })
             {
-                auto image { loader->loadImage (juceString (bg.image)) };
+                const URL url (juceString (bg.image));
+                Image image;
+                const bool ok { loader->loadLocalOrCached<Image> (url, image) };
 
-                if (!image.isNull())
+                if (ok && !image.isNull())
                 {
                     // @todo handle background paint correctly
                     Rectangle<float> frect;
@@ -433,6 +444,14 @@ private:
     }
 
     WebView& webView;
+
+    struct ImageSize
+    {
+        int width;
+        int height;
+    };
+
+    std::map<size_t, ImageSize> imageSizeCache;
 };
 
 //==============================================================================

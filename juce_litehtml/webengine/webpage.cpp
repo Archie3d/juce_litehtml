@@ -22,8 +22,11 @@ struct WebPage::Impl
             return;
 
         loader.setBaseURL (url);
-        const auto html { loader.loadText (url) };
-        loadFromHTML (html);
+
+        loader.loadAsync<String> (url, [this](bool ok, const String& html) -> void {
+            if (ok)
+                loadFromHTML (html);
+        });
     }
 
     void loadFromHTML (const String& html)
