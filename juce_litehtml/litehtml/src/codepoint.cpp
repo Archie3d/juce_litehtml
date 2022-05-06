@@ -44,7 +44,7 @@ namespace litehtml {
 
 bool is_ascii_codepoint(litehtml::tchar_t c)
 {
-    return (c < 128);
+    return (unsigned)c < 128;
 }
 
 // https://datatracker.ietf.org/doc/html/rfc3986#section-2.2

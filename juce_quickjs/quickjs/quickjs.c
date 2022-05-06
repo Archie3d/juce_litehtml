@@ -23823,7 +23823,7 @@ static __exception int js_parse_array_literal(JSParseState *s)
     }
   done:
     if (tag != JS_UNINITIALIZED) {
-      emit_push_const(s, tag, 0);
+      (void)emit_push_const(s, tag, 0);
       JS_FreeValue(s->ctx, tag);
       emit_op(s, OP_define_field);
       emit_atom(s, JS_ATOM_tag);
@@ -24814,7 +24814,7 @@ static __exception int js_parse_postfix_expr(JSParseState *s, int parse_flags)
         return -1;
       {
         JSValue filename = JS_NewString(s->ctx, s->filename);
-        emit_push_const(s, filename, 0);
+        (void)emit_push_const(s, filename, 0);
         JS_FreeValue(s->ctx, filename);
       }
       break;
@@ -24832,7 +24832,7 @@ static __exception int js_parse_postfix_expr(JSParseState *s, int parse_flags)
           else if (*pc == '?' || *pc == '#') break;
         }
         JSValue dir = JS_NewStringLen(s->ctx, s->filename, n + 1);
-        emit_push_const(s, dir, 0);
+        (void)emit_push_const(s, dir, 0);
         JS_FreeValue(s->ctx, dir);
       }
       break;

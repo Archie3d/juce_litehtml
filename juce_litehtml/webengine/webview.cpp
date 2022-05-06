@@ -94,8 +94,11 @@ public:
     int pt_to_px (int pt) const override
     {
         const auto& displays { Desktop::getInstance().getDisplays() };
-        auto& display = displays.getMainDisplay();
-        return (int) (display.dpi * pt / 72.0 / display.scale);
+
+        if (auto* display { displays.getPrimaryDisplay() })
+            return (int) (display->dpi * pt / 72.0 / display->scale);
+    
+        return pt * 8 / 6;
     }
 
     int get_default_font_size() const override
@@ -212,7 +215,7 @@ public:
         }
     }
 
-    void draw_borders (uint_ptr hdc, const borders& borders, const position& draw_pos, bool root) override
+    void draw_borders (uint_ptr hdc, const borders& borders, const position& draw_pos, [[maybe_unused]] bool root) override
     {
         if (auto* g { static_cast<Graphics*> ((void*) hdc) })
         {
@@ -374,17 +377,29 @@ public:
     void get_media_features(litehtml::media_features &media) const override
     {
         const auto& displays { Desktop::getInstance().getDisplays() };
-        auto& display { displays.getMainDisplay() };
+
+        if (auto* display { displays.getPrimaryDisplay() })
+        {
+            media.width = display->userArea.getWidth();
+            media.height = display->userArea.getHeight();
+            media.resolution = (int) display->dpi;
+            media.device_width = display->totalArea.getWidth();
+            media.device_height = display->totalArea.getHeight();
+        }
+        else
+        {
+            // Dummy values
+            media.width = 1024;
+            media.height = 768;
+            media.resolution = 72;
+            media.device_width = 1024;
+            media.device_height = 768;
+        }
 
         media.type = litehtml::media_type_screen;
-        media.width = display.userArea.getWidth();
-        media.height = display.userArea.getHeight();
         media.color = 8;
         media.monochrome = 0;
         media.color_index = 256;
-        media.resolution = (int) display.dpi;
-        media.device_width = display.totalArea.getWidth();
-        media.device_height = display.totalArea.getHeight();
     }
 
     void get_language (tstring &language, tstring &culture) const override

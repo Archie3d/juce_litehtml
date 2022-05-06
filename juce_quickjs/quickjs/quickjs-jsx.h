@@ -287,7 +287,7 @@ static int js_parse_jsx_expr(JSParseState *s, int level)
       const uint8_t *start = s->buf_ptr;
       s->buf_ptr = p;
       if (is_non_space_run(start, p)) {
-        JSValue str = JS_NewStringLen(s->ctx, start, p - start);
+        JSValue str = JS_NewStringLen(s->ctx, (const char*)start, p - start);
         if(str == JS_EXCEPTION)
         goto fail;
         if (emit_push_const(s,str, 1)) {
