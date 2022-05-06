@@ -13,7 +13,7 @@ struct WebPage::Impl
 
     Impl()
     {
-        context.load_master_stylesheet(master_css);
+        context.load_master_stylesheet (master_css);
     }
 
     void loadFromURL (const URL& url)
@@ -25,7 +25,9 @@ struct WebPage::Impl
 
         loader.loadAsync<String> (url, [this](bool ok, const String& html) -> void {
             if (ok)
+            {
                 loadFromHTML (html);
+            }
         });
     }
 
