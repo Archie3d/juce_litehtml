@@ -14,7 +14,7 @@ namespace litehtml
 		tstring	text;
 		tstring	baseurl;
 		tstring	media;
-		
+
 		css_text() = default;
 
 		css_text(const tchar_t* txt, const tchar_t* url, const tchar_t* media_str)
@@ -89,7 +89,7 @@ namespace litehtml
 
 		static litehtml::document::ptr createFromString(const tchar_t* str, litehtml::document_container* objPainter, litehtml::context* ctx, litehtml::css* user_styles = nullptr);
 		static litehtml::document::ptr createFromUTF8(const char* str, litehtml::document_container* objPainter, litehtml::context* ctx, litehtml::css* user_styles = nullptr);
-	
+
 	private:
 		litehtml::uint_ptr	add_font(const tchar_t* name, int size, const tchar_t* weight, const tchar_t* style, const tchar_t* decoration, font_metrics* fm);
 

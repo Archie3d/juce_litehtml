@@ -1,5 +1,4 @@
 #include "litehtml.h"
-#include "webview.h"
 
 namespace juce_litehtml {
 
@@ -319,24 +318,27 @@ public:
     void import_css (tstring &text, const tstring &url, tstring &baseurl) override
     {
         // @todo Load css
+        jassertfalse;
     }
 
     void set_clip (const position &pos, const border_radiuses &bdr_radius, bool valid_x, bool valid_y) override
     {
         // @todo
+        jassertfalse;
     }
 
     void del_clip() override
     {
         // @todo
+        jassertfalse;
     }
 
     void get_client_rect (position& client) const override
     {
-        //client.x = webView.getX();
-        //client.y = webView.getY();
-        //client.width = webView.getWidth();
-        //client.height = webView.getHeight();
+        client.x = 0;
+        client.y = 0;
+        client.width = webView.getWidth();
+        client.height = webView.getHeight();
     }
 
     litehtml::element::ptr create_element (const tchar_t *tag_name,
@@ -392,14 +394,72 @@ private:
 
 struct WebView::Impl
 {
+    WebView& self;
+    Renderer renderer;
+    litehtml::document::ptr document { nullptr };
+
+    Impl (WebView& wv)
+        : self { wv },
+          renderer (wv)
+    {
+    }
+
+    void render()
+    {
+        if (document == nullptr)
+            return;
+
+        const auto width { self.getWidth() };
+        document->render (width, litehtml::render_all);
+
+        DBG("WIDTH: " << String (document->width()));
+        DBG("HEIGHT: " << String (document->height()));
+    }
+
+    void paint (Graphics& g)
+    {
+        // @todo Get the colour from <body> style
+        g.fillAll (Colours::white);
+
+        if (document == nullptr)
+            return;
+
+        litehtml::position clip (0, 0, self.getWidth(), self.getHeight());
+
+        // @todo Use scroll position for drawing
+        document->draw ((litehtml::uint_ptr)&g, 0, 0, &clip);
+    }
 
 };
 
+//==============================================================================
+
 WebView::WebView()
-    : d { std::make_unique<Impl>() }
+    : d { std::make_unique<Impl>(*this) }
 {
 }
 
 WebView::~WebView() = default;
+
+void WebView::setDocument (litehtml::document::ptr doc)
+{
+    d->document = doc;
+    resized();
+}
+
+litehtml::document_container& WebView::getRenderer() noexcept
+{
+    return d->renderer;
+}
+
+void WebView::paint (Graphics& g)
+{
+    d->paint (g);
+}
+
+void WebView::resized()
+{
+    d->render();
+}
 
 } // namespace juce_litehtml

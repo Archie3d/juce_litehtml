@@ -5,8 +5,13 @@ namespace juce_litehtml {
 class WebPage final
 {
 public:
-    WebPage();
+    WebPage (WebView* view = nullptr);
     ~WebPage();
+
+    void setView (WebView* view);
+
+    void loadFromURL (const juce::URL& url);
+    void loadFromHTML (const juce::String& html);
 
 private:
 
