@@ -87,13 +87,14 @@ void WebPage::reload()
 
 void WebPage::followLink (const URL& url)
 {
+    const auto fixedURL { d->loader.fixUpURL (url) };
     bool shouldFollow { true };
 
     if (d->client != nullptr)
-        shouldFollow = d->client->followLink (url);
+        shouldFollow = d->client->followLink (fixedURL);
 
     if (shouldFollow)
-        d->loadFromURL (url);
+        d->loadFromURL (fixedURL);
 }
 
 litehtml::document::ptr WebPage::getDocument()
