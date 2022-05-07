@@ -25,6 +25,8 @@
 #include <juce_data_structures/juce_data_structures.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 
+#include "litehtml.h"
+
 #include "webengine/webloader.h"
 #include "webengine/webpage.h"
 #include "webengine/webview.h"

@@ -1,5 +1,3 @@
-#include "litehtml.h"
-
 namespace juce_litehtml {
 
 using namespace litehtml;
