@@ -23,6 +23,7 @@ public:
     void mouseMove (const juce::MouseEvent& event) override;
     void mouseDown (const juce::MouseEvent& event) override;
     void mouseUp (const juce::MouseEvent& event) override;
+    void mouseWheelMove (const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel) override;
 
 private:
     struct Impl;

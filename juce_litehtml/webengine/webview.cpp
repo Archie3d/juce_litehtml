@@ -511,6 +511,9 @@ struct WebView::Impl : public WebPage::ViewClient,
         vScrollBar.setAutoHide (false);
         hScrollBar.setAutoHide (false);
 
+        vScrollBar.setSingleStepSize (16);
+        hScrollBar.setSingleStepSize (16);
+
         self.addAndMakeVisible (vScrollBar);
         self.addAndMakeVisible (hScrollBar);
 
@@ -554,6 +557,7 @@ struct WebView::Impl : public WebPage::ViewClient,
 
         hScrollBar.setVisible (hRange > 0);
         vScrollBar.setVisible (vRange > 0);
+
 
         hScrollBar.setRangeLimits (0, documentWidth, dontSendNotification);
         vScrollBar.setRangeLimits (0, documentHeight, dontSendNotification);
@@ -629,6 +633,12 @@ struct WebView::Impl : public WebPage::ViewClient,
 
         if (currentDocument->on_lbutton_up (x, y, x, y, redrawBoxes))
             renderAndPaint();
+    }
+
+    void mouseWheelMove (const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel)
+    {
+        vScrollBar.mouseWheelMove (event, wheel);
+        hScrollBar.mouseWheelMove (event, wheel);
     }
 
     void renderAndPaint()
@@ -717,5 +727,9 @@ void WebView::mouseUp(const MouseEvent& event)
     d->mouseUp (event);
 }
 
+void WebView::mouseWheelMove (const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel)
+{
+    d->mouseWheelMove (event, wheel);
+}
 
 } // namespace juce_litehtml
