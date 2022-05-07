@@ -8,6 +8,7 @@ struct WebPage::Impl
     litehtml::context context;
     litehtml::document::ptr document { nullptr };
     litehtml::document_container* renderer { nullptr };
+    URL pageUrl;
 
     ListenerList<WebPage::Listener> listeners;
 
@@ -21,6 +22,7 @@ struct WebPage::Impl
         if (renderer == nullptr)
             return;
 
+        pageUrl = url;
         loader.setBaseURL (url);
 
         loader.loadAsync<String> (url, [this](bool ok, const String& html) -> void {
@@ -36,6 +38,11 @@ struct WebPage::Impl
 
         document = litehtml::document::createFromUTF8 (html.toRawUTF8(), renderer, &context);
         notifyDocumentLoaded();
+    }
+
+    void reload()
+    {
+        loadFromURL (pageUrl);
     }
 
     void notifyDocumentLoaded()
@@ -61,6 +68,11 @@ void WebPage::loadFromURL (const URL& url)
 void WebPage::loadFromHTML (const String& html)
 {
     d->loadFromHTML (html);
+}
+
+void WebPage::reload()
+{
+    d->reload();
 }
 
 void WebPage::addListener (Listener* listener)

@@ -30,6 +30,7 @@ public:
 
     void loadFromURL (const juce::URL& url);
     void loadFromHTML (const juce::String& html);
+    void reload();
 
     void addListener (Listener* listener);
     void removeListener (Listener* listener);
