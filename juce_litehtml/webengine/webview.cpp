@@ -304,11 +304,11 @@ public:
         // Called when el_link element gets parsed
     }
 
-    void on_anchor_click (const tchar_t* url, const litehtml::element::ptr& el) override
+    void on_anchor_click (const tchar_t* turl, const litehtml::element::ptr& el) override
     {
         if (followLink)
         {
-            const URL url (juceString (url));
+            const URL url (juceString (turl));
             followLink (url);
         }
     }
@@ -661,7 +661,7 @@ struct WebView::Impl : public WebPage::ViewClient,
     }
 
     // ScrollBar::Listener
-    void scrollBarMoved (ScrollBar* scrollBar, double newRangeStart)
+    void scrollBarMoved (ScrollBar* scrollBar, double newRangeStart) override
     {
         if (scrollBar == &vScrollBar)
             scrollY = (int)newRangeStart;
