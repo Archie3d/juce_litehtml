@@ -23,6 +23,15 @@ static String juceString (const tstring& s)
     return String (s.c_str());
 }
 
+static tstring to_tstring (const String& s)
+{
+#ifdef LITEHTML_UTF8
+    return s.toStdString();
+#else
+    return tstring (s.toWideCharPointer());
+#endif
+}
+
 //==============================================================================
 
 class Renderer final : public litehtml::document_container
@@ -97,7 +106,7 @@ public:
 
         if (auto* display { displays.getPrimaryDisplay() })
             return (int) (display->dpi * pt / 72.0 / display->scale);
-    
+
         return pt * 8 / 6;
     }
 
@@ -149,7 +158,7 @@ public:
                 {
                     // Cache image size
                     imageSizeCache[url.toString (true).hash()] = { image.getWidth(), image.getHeight() };
-                    
+
                     if (redraw_on_ready)
                         webView.resized();
                         webView.repaint();
@@ -292,14 +301,16 @@ public:
     void link (const std::shared_ptr<litehtml::document>& doc, const litehtml::element::ptr& el) override
     {
         // @todo
+        // Called when el_link element gets parsed
     }
 
     void on_anchor_click (const tchar_t* url, const litehtml::element::ptr& el) override
     {
-        String sUrl (juceString (url));
-        sUrl = sUrl.trim();
-
-        // @todo Navigate to the clicked URL
+        if (followLink)
+        {
+            const URL url (juceString (url));
+            followLink (url);
+        }
     }
 
     void set_cursor (const tchar_t* cursor) override
@@ -351,22 +362,36 @@ public:
     #endif
     }
 
-    void import_css (tstring &text, const tstring &url, tstring &baseurl) override
+    void import_css (tstring &text, const tstring &tsurl, tstring &baseurl) override
     {
-        // @todo Load css
-        jassertfalse;
+        if (auto* loader { getLoader() })
+        {
+            const URL url (juceString (tsurl));
+            const String content { loader->loadTextSync (url) };
+
+            text = to_tstring (content);
+        }
     }
 
-    void set_clip (const position &pos, const border_radiuses &bdr_radius, bool valid_x, bool valid_y) override
+    void set_clip (litehtml::uint_ptr hdc, const position &pos, const border_radiuses &bdr_radius, bool valid_x, bool valid_y) override
     {
-        // @todo
-        jassertfalse;
+        if (auto* g { static_cast<Graphics*> ((void*) hdc) })
+        {
+            g->saveState();
+            const auto clip { g->getClipBounds() };
+            g->reduceClipRegion(valid_x ? pos.x : clip.getX(),
+                                valid_y ? pos.y : clip.getY(),
+                                valid_x ? pos.width : clip.getWidth(),
+                                valid_y ? pos.height : clip.getHeight());
+        }
     }
 
-    void del_clip() override
+    void del_clip(litehtml::uint_ptr hdc) override
     {
-        // @todo
-        jassertfalse;
+        if (auto* g { static_cast<Graphics*> ((void*) hdc) })
+        {
+            g->restoreState();
+        }
     }
 
     void get_client_rect (position& client) const override
@@ -433,6 +458,10 @@ public:
     #endif
     }
 
+    // Callbacks
+
+    std::function<void (const URL&)> followLink{};
+
 private:
 
     WebLoader* getLoader()
@@ -458,7 +487,7 @@ private:
 
 constexpr static int scrollBarSize { 10 };
 
-struct WebView::Impl : public WebPage::Listener,
+struct WebView::Impl : public WebPage::ViewClient,
                        public ScrollBar::Listener
 {
     WebView& self;
@@ -477,6 +506,8 @@ struct WebView::Impl : public WebPage::Listener,
           vScrollBar (true),
           hScrollBar (false)
     {
+        renderer.followLink = [this](const URL& url) -> void { followLink (url); };
+
         vScrollBar.setAutoHide (false);
         hScrollBar.setAutoHide (false);
 
@@ -491,7 +522,7 @@ struct WebView::Impl : public WebPage::Listener,
     {
         if (page != nullptr)
         {
-            page->removeListener (this);
+            page->setViewClient (nullptr);
             page->setRenderer (nullptr);
         }
 
@@ -499,7 +530,7 @@ struct WebView::Impl : public WebPage::Listener,
 
         if (page != nullptr)
         {
-            page->addListener (this);
+            page->setViewClient (this);
             page->setRenderer (&renderer);
             document = page->getDocument();
         }
@@ -551,11 +582,82 @@ struct WebView::Impl : public WebPage::Listener,
         document->draw ((litehtml::uint_ptr)&g, -scrollX, -scrollY, &clip);
     }
 
-    // WebPage::Listener
-    void documentLoaded()
+    void mouseMove(const MouseEvent& event)
+    {
+        if (document == nullptr)
+            return;
+
+        const int x { event.x + scrollX };
+        const int y { event.y + scrollY };
+
+        std::vector<litehtml::position> redrawBoxes;
+
+        auto currentDocument { document };
+
+        if (document->on_mouse_over (x, y, x, y, redrawBoxes))
+            renderAndPaint();
+    }
+
+    void mouseDown(const MouseEvent& event)
+    {
+        if (document == nullptr)
+            return;
+
+        const int x { event.x + scrollX };
+        const int y { event.y + scrollY };
+
+        std::vector<litehtml::position> redrawBoxes;
+
+        if (document->on_lbutton_down (x, y, x, y, redrawBoxes))
+            renderAndPaint();
+    }
+
+    void mouseUp(const MouseEvent& event)
+    {
+        if (document == nullptr)
+            return;
+
+        const int x { event.x + scrollX };
+        const int y { event.y + scrollY };
+
+        std::vector<litehtml::position> redrawBoxes;
+
+        // @note Processing mouse up event on the document may cause its
+        //       reload. Here we capture the current document pointer
+        //       in order to preven it to be accidentally released.
+        auto currentDocument { document };
+
+        if (currentDocument->on_lbutton_up (x, y, x, y, redrawBoxes))
+            renderAndPaint();
+    }
+
+    void renderAndPaint()
+    {
+        render();
+        self.repaint();
+    }
+
+    void followLink (const URL& url)
+    {
+        if (page != nullptr)
+            page->followLink (url);
+    }
+
+    // WebPage::ViewClient
+    void documentAboutToBeReloaded() override
+    {
+    }
+
+    void documentLoaded() override
     {
         document = page->getDocument();
-        self.resized();
+        jassert (document != nullptr);
+
+        // Reset the scroll position as a new document has been loaded
+        scrollX = 0;
+        scrollY = 0;
+
+        renderAndPaint();
     }
 
     // ScrollBar::Listener
@@ -599,5 +701,21 @@ void WebView::resized()
 {
     d->render();
 }
+
+void WebView::mouseMove (const MouseEvent& event)
+{
+    d->mouseMove (event);
+}
+
+void WebView::mouseDown(const MouseEvent& event)
+{
+    d->mouseDown (event);
+}
+
+void WebView::mouseUp(const MouseEvent& event)
+{
+    d->mouseUp (event);
+}
+
 
 } // namespace juce_litehtml

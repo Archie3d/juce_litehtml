@@ -20,6 +20,10 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
 
+    void mouseMove (const juce::MouseEvent& event) override;
+    void mouseDown (const juce::MouseEvent& event) override;
+    void mouseUp (const juce::MouseEvent& event) override;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> d;

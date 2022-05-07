@@ -33,48 +33,63 @@ public:
     template <typename T>
     void loadAsync (const juce::URL& url, const std::function<void (bool, const T&)>& callback, const juce::String& headers = "")
     {
+        auto fixedUrl { fixUpURL (url) };
+
         {
             T content{};
 
            // Reading local and binary resources
-            if (loadLocal (url, content))
+            if (loadLocal (fixedUrl, content))
             {
                 callback (true, content);
                 return;
             }
 
             // Reading from the cache
-            if (loadFromCache (url, content))
+            if (loadFromCache (fixedUrl, content))
             {
                 callback (true, content);
                 return;
             }
         }
 
-        const auto file { getCachedResource (url) };
+        const auto file { getCachedResource (fixedUrl) };
 
         const auto downloadOptions = juce::URL::DownloadTaskOptions()
-            .withExtraHeaders(headers)
-            .withListener(this);
+            .withExtraHeaders (headers)
+            .withListener (this);
 
-        if (auto task { juce::URL (url).downloadToFile (file, downloadOptions) })
+        if (auto task { fixedUrl.downloadToFile (file, downloadOptions) })
         {
             auto* taskPtr {task.get()};
             downloadTasks.add (task.release());
 
-            downloadTaskCallbackMap[taskPtr] = [objValid = std::weak_ptr<bool>(valid), this, url, callback]() -> void {
+            downloadTaskCallbackMap[taskPtr] = [objValid = std::weak_ptr<bool>(valid), this, fixedUrl, callback]() -> void {
                 if (objValid.expired())
                     return;
 
                 T content{};
 
-                if (loadFromCache (url, content, false))
+                if (loadFromCache (fixedUrl, content, false))
                     callback (true, content);
                 else
                     callback (false, content);
             };
         }
+        else
+        {
+            // Failed to load
+            callback (false, {});
+        }
     }
+
+    /** Load text resource synchronously.
+
+        This will attempt to load the requested resource locally or from
+        cache, and if failed will load it from the network on the current thread.
+        The loaded content will be cached.
+     */
+    juce::String loadTextSync (const juce::URL& url);
 
     /** Load local or cached resource synchronously.
 
@@ -85,19 +100,22 @@ public:
     template <typename T>
     bool loadLocalOrCached (const juce::URL& url, T& content)
     {
+        const auto fixedUrl { fixUpURL (url) };
+
         // Reading local and binary resources
-        if (loadLocal (url, content))
+        if (loadLocal (fixedUrl, content))
             return true;
 
         // Reading from the cache
-        if (loadFromCache (url, content))
+        if (loadFromCache (fixedUrl, content))
             return true;
-        
+
         return false;
     }
 
-private:
     juce::URL fixUpURL (const juce::URL& url) const;
+
+private:
     void assureCachePathExists();
     juce::File getCachedResource (const juce::URL& url);
 

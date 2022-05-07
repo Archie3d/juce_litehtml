@@ -18,11 +18,11 @@ class WebPage final
 {
 public:
 
-    class Listener
+    class Client
     {
     public:
-        virtual ~Listener() = default;
-        virtual void documentLoaded() {};
+        virtual ~Client() = default;
+        virtual bool followLink (const juce::URL& url) = 0;
     };
 
     WebPage();
@@ -30,18 +30,31 @@ public:
 
     void loadFromURL (const juce::URL& url);
     void loadFromHTML (const juce::String& html);
+    void reload();
 
-    void addListener (Listener* listener);
-    void removeListener (Listener* listener);
+    void followLink (const juce::URL& url);
 
     litehtml::document::ptr getDocument();
     WebLoader& getLoader();
+
+    void setClient (Client* client);
+    Client* getClient();
 
 private:
 
     friend class WebView;
 
     void setRenderer (litehtml::document_container* renderer);
+
+    class ViewClient
+    {
+    public:
+        virtual ~ViewClient() = default;
+        virtual void documentAboutToBeReloaded() = 0;
+        virtual void documentLoaded() = 0;
+    };
+
+    void setViewClient (ViewClient* view);
 
     struct Impl;
     std::unique_ptr<Impl> d;

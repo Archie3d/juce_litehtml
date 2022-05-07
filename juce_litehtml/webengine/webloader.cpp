@@ -98,11 +98,37 @@ bool WebLoader::loadLocal (const URL& url, Image& image)
     return false;
 }
 
+String WebLoader::loadTextSync (const juce::URL& url)
+{
+    String content;
+
+    if (loadLocalOrCached (url, content))
+        return content;
+
+    const auto fixedUrl { fixUpURL (url) };
+
+    content = fixedUrl.readEntireTextStream();
+
+    // Save to cache
+    const auto file { getCachedResource (fixedUrl) };
+    file.replaceWithText (content);
+
+    return content;
+}
+
 URL WebLoader::fixUpURL (const URL& url) const
 {
     if (url.getScheme().isEmpty())
     {
-        if (const auto subPath { url.getSubPath() }; subPath.isNotEmpty())
+        const String sUrl { url.toString (true) };
+
+        if (sUrl.startsWith ("//"))
+            return URL (baseURL.getScheme() + ":" + sUrl);
+
+        if (sUrl.startsWith ("/"))
+            return baseURL.getScheme() + "://" + baseURL.getDomain() + sUrl;
+
+        if (const auto subPath { url.getSubPath (true) }; subPath.isNotEmpty())
             return baseURL.getChildURL (subPath);
 
         return baseURL.getChildURL (url.getFileName());
@@ -225,7 +251,7 @@ void WebLoader::finished (URL::DownloadTask* task, bool success)
             }
             else
             {
-                auto targetFile {task->getTargetLocation()};
+                auto targetFile { task->getTargetLocation() };
                 targetFile.deleteFile();
             }
 
