@@ -10,7 +10,8 @@ struct WebPage::Impl
     litehtml::document_container* renderer { nullptr };
     URL pageUrl;
 
-    ListenerList<WebPage::Listener> listeners;
+    WebPage::ViewClient* viewClient { nullptr };
+    WebPage::Client* client { nullptr };
 
     Impl()
     {
@@ -22,10 +23,17 @@ struct WebPage::Impl
         if (renderer == nullptr)
             return;
 
-        pageUrl = url;
-        loader.setBaseURL (url);
+        const auto fixedUrl { loader.fixUpURL (url) };
+        pageUrl = fixedUrl;
 
-        loader.loadAsync<String> (url, [this](bool ok, const String& html) -> void {
+        // @note This is a workaround for the server-generated reources
+        //       which will have the same URL, so will be delivered from
+        //       cache and will never update.
+        //loader.purgeCache();
+
+        loader.setBaseURL (fixedUrl);
+
+        loader.loadAsync<String> (fixedUrl, [this](bool ok, const String& html) -> void {
             if (ok)
                 loadFromHTML (html);
         });
@@ -36,18 +44,18 @@ struct WebPage::Impl
         if (renderer == nullptr)
             return;
 
+        if (viewClient != nullptr)
+            viewClient->documentAboutToBeReloaded();
+
         document = litehtml::document::createFromUTF8 (html.toRawUTF8(), renderer, &context);
-        notifyDocumentLoaded();
+
+        if (viewClient != nullptr)
+            viewClient->documentLoaded();
     }
 
     void reload()
     {
         loadFromURL (pageUrl);
-    }
-
-    void notifyDocumentLoaded()
-    {
-        listeners.call([](Listener& listener) { listener.documentLoaded(); });
     }
 };
 
@@ -75,14 +83,15 @@ void WebPage::reload()
     d->reload();
 }
 
-void WebPage::addListener (Listener* listener)
+void WebPage::followLink (const URL& url)
 {
-    d->listeners.add (listener);
-}
+    bool shouldFollow { true };
 
-void WebPage::removeListener (Listener* listener)
-{
-    d->listeners.remove (listener);
+    if (d->client != nullptr)
+        shouldFollow = d->client->followLink (url);
+
+    if (shouldFollow)
+        d->loadFromURL (url);
 }
 
 litehtml::document::ptr WebPage::getDocument()
@@ -95,9 +104,24 @@ WebLoader& WebPage::getLoader()
     return d->loader;
 }
 
+void WebPage::setClient (Client* client)
+{
+    d->client = client;
+}
+
+WebPage::Client* WebPage::getClient()
+{
+    return d->client;
+}
+
 void WebPage::setRenderer (litehtml::document_container* renderer)
 {
     d->renderer = renderer;
+}
+
+void WebPage::setViewClient (ViewClient* view)
+{
+    d->viewClient = view;
 }
 
 } // namespace juce_litehtml

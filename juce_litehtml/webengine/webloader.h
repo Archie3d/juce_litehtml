@@ -113,8 +113,9 @@ public:
         return false;
     }
 
-private:
     juce::URL fixUpURL (const juce::URL& url) const;
+
+private:
     void assureCachePathExists();
     juce::File getCachedResource (const juce::URL& url);
 
