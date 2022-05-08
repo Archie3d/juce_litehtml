@@ -29,15 +29,24 @@
 #include "gumbo.h"
 #include "utf8_strings.h"
 
+JSClassID litehtml::document::jsClassID = 0;
+
 litehtml::document::document(litehtml::document_container* objContainer, litehtml::context* ctx)
 {
 	m_container	= objContainer;
 	m_context	= ctx;
+
+	m_jsValue   = JS_NewObjectClass(ctx->js_context(), jsClassID);
+	JS_SetOpaque (m_jsValue, new js_object_ref(this));
 }
 
 litehtml::document::~document()
 {
+	if (m_jsValue != JS_UNINITIALIZED)
+		JS_FreeValue (m_context->js_context(), m_jsValue);
+
 	m_over_element = nullptr;
+
 	if(m_container)
 	{
 		for(auto & m_font : m_fonts)
@@ -45,6 +54,11 @@ litehtml::document::~document()
 			m_container->delete_font(m_font.second.font);
 		}
 	}
+}
+
+void litehtml::document::register_js_prototype(JSContext* ctx, JSValue prototype)
+{
+
 }
 
 litehtml::document::ptr litehtml::document::createFromString( const tchar_t* str, litehtml::document_container* objPainter, litehtml::context* ctx, litehtml::css* user_styles)
@@ -572,10 +586,13 @@ litehtml::element::ptr litehtml::document::create_element(const tchar_t* tag_nam
 	if(newTag)
 	{
 		newTag->set_tagName(tag_name);
+
 		for (const auto & attribute : attributes)
 		{
 			newTag->set_attr(attribute.first.c_str(), attribute.second.c_str());
 		}
+
+		newTag->init_js_value();
 	}
 
 	return newTag;
@@ -698,7 +715,7 @@ void litehtml::document::create_node(void* gnode, elements_vector& elements, boo
 						}
 					);
 				}
-				elements.push_back(ret);
+				elements.push_back(std::move(ret));
 			}
 		}
 		break;

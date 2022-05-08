@@ -39,6 +39,20 @@ namespace litehtml
 	public:
 		typedef std::shared_ptr<document>	ptr;
 		typedef std::weak_ptr<document>		weak_ptr;
+
+		static JSClassID jsClassID;
+
+		struct js_object_ref
+		{
+			document* doc { nullptr };
+
+			js_object_ref(document* d)
+				: doc { d }
+			{}
+		};
+
+		static void register_js_prototype(JSContext* ctx, JSValue prototype);
+
 	private:
 		std::shared_ptr<element>			m_root;
 		document_container*					m_container;
@@ -55,6 +69,9 @@ namespace litehtml
 		media_features						m_media;
 		tstring                             m_lang;
 		tstring                             m_culture;
+
+		JSValue								m_jsValue;
+
 	public:
 		document(litehtml::document_container* objContainer, litehtml::context* ctx);
 		virtual ~document();

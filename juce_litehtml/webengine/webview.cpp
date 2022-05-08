@@ -569,12 +569,15 @@ struct WebView::Impl : public WebPage::ViewClient,
         if (page == nullptr)
             return;
 
+        auto document { page->getDocument() };
+
+        if (document == nullptr)
+            return;
+
         const int x { event.x + scrollX };
         const int y { event.y + scrollY };
 
         std::vector<litehtml::position> redrawBoxes;
-
-        auto document { page->getDocument() };
 
         if (document->on_mouse_over (x, y, x, y, redrawBoxes))
             renderAndPaint();

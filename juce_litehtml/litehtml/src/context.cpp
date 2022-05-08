@@ -1,11 +1,14 @@
 #include "html.h"
 #include "context.h"
 #include "stylesheet.h"
+#include "document.h"
 
 litehtml::context::context()
 {
 	m_jsRuntime = JS_NewRuntime();
 	m_jsContext = JS_NewContext(m_jsRuntime);
+
+	register_js_classes();
 }
 
 litehtml::context::~context()
@@ -16,6 +19,7 @@ litehtml::context::~context()
 
 void litehtml::context::register_js_classes()
 {
+	register_js_class<litehtml::document>("Document");
 	register_js_class<litehtml::element>("Element");
 	register_js_class<litehtml::html_tag>("HTMLElement");
 }

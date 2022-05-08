@@ -37,9 +37,9 @@ namespace litehtml
 							delete ref;
 						}
 					},
-					nullptr,	// JSClassGCMark
-					nullptr,	// JSClassCall
-					nullptr		// JSClassExoticMethods
+					nullptr,
+					nullptr,
+					nullptr
 				};
 
 				[[maybe_unused]] const auto res = JS_NewClass(m_jsRuntime, T::jsClassID, &def);

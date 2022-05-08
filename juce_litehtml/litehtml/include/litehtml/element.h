@@ -28,7 +28,7 @@ namespace litehtml
 
 		struct js_object_ref
 		{
-			element::ptr element;
+			element::weak_ptr element {};
 
 			js_object_ref(element::ptr el)
 				: element { el }
@@ -46,6 +46,7 @@ namespace litehtml
 		margins						m_borders;
 		bool						m_skip;
 
+		JSContext*					m_jsContext;
 		JSValue						m_jsValue;
 
 		virtual void select_all(const css_selector& selector, elements_vector& res);
