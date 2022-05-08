@@ -51,6 +51,7 @@ public:
     WebPage();
     ~WebPage();
 
+    /** Returns web context owned by this page. */
     WebContext& getContext();
 
     /** Load document from URL.

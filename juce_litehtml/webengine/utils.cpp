@@ -28,4 +28,13 @@ static litehtml::tstring to_tstring (const String& s)
 #endif
 }
 
+static const litehtml::tchar_t* to_tchar (const String& s)
+{
+#ifdef LITEHTML_UTF8
+    return s.toRawUTF8();
+#else
+    return s.toWideCharPointer();
+#endif
+}
+
 } // namespace juce_litehtml

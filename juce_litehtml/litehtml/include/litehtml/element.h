@@ -94,6 +94,8 @@ namespace litehtml
 
 		std::shared_ptr<document>	get_document() const;
 
+		element::ptr				get_parent() const;
+
 		virtual elements_vector		select_all(const tstring& selector);
 		virtual elements_vector		select_all(const css_selector& selector);
 
@@ -402,6 +404,11 @@ namespace litehtml
 	inline std::shared_ptr<document> element::get_document() const
 	{
 		return m_doc.lock();
+	}
+
+	inline element::ptr element::get_parent() const
+	{
+		return m_parent.lock();
 	}
 }
 
