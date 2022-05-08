@@ -18,29 +18,6 @@ public:
     /** Returns the loader. */
     WebLoader& getLoader() { return loader; }
 
-    /** Returns the JavaScript runtime. */
-    js::Runtime& getJavaScriptRuntime() noexcept { return jsRuntime; }
-
-    /** Returns the JavaScript context. */
-    js::Context& getJavaScriptContext() noexcept { return jsContext; }
-
-    /** Register a DOM element with the JS context.
-
-        This will register a DOM element class with the
-        JS context. This is required to track Element objects
-        and distinguish them from other objects injected into
-        the JS context.
-     */
-    template <class T>
-    void registerElement (juce::StringRef name)
-    {
-        jsContext.registerClass<T> (name);
-        elementClassIDs.insert (T::jsClassID);
-    }
-
-    /** Tells whether the JS class ID is registered for a DOM element. */
-    bool isRegisteredElementClassID (JSClassID id) const;
-
     /** Litehtml elements factory.
 
         This method is called by the document when creating
@@ -55,10 +32,6 @@ private:
 
     WebLoader loader;
 
-    js::Runtime jsRuntime;
-    js::Context jsContext;
-
-    std::set<JSClassID> elementClassIDs;
 };
 
 } // namespace juce_litehtml

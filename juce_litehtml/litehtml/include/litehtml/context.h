@@ -11,12 +11,6 @@ extern "C" {
 
 namespace litehtml
 {
-	struct js_object_ref
-	{
-		virtual ~js_object_ref() = default;
-		virtual void release_js_object() {};
-	};
-
 	class context
 	{
 		litehtml::css	m_master_css;
@@ -38,9 +32,8 @@ namespace litehtml
 				const JSClassDef def {
 					className,
 					[](JSRuntime*, JSValue value) {
-                    	if (auto* ref { static_cast<T::element_js_object_ref*>(JS_GetOpaque (value, T::jsClassID)) })
+                    	if (auto* ref { static_cast<T::js_object_ref*>(JS_GetOpaque (value, T::jsClassID)) })
 						{
-							ref->release_js_object();
 							delete ref;
 						}
 					},

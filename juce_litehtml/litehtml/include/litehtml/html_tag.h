@@ -39,6 +39,7 @@ namespace litehtml
 		friend class line_box;
 	public:
 		typedef std::shared_ptr<litehtml::html_tag>	ptr;
+
 	protected:
 		box::vector				m_boxes;
 		string_vector			m_class_values;

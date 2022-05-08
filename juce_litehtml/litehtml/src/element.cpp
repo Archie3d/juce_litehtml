@@ -31,7 +31,7 @@ void litehtml::element::init_js_value()
 	if (auto doc { m_doc.lock() })
 	{
 		m_jsValue   = JS_NewObjectClass(doc->context()->js_context(), jsClassID);
-		JS_SetOpaque (m_jsValue, new element_js_object_ref(shared_from_this()));
+		JS_SetOpaque (m_jsValue, new js_object_ref(shared_from_this()));
 	}
 }
 

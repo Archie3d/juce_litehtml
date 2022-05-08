@@ -17,7 +17,7 @@ using namespace juce;
 
 #include "webengine/webloader.cpp"
 #include "webengine/webcontext.cpp"
-#include "webengine/webdom.cpp"
+//#include "webengine/webdom.cpp"
 #include "webengine/webpage.cpp"
 #include "webengine/webview.cpp"
 
