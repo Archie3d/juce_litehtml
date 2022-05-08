@@ -2,36 +2,6 @@ namespace juce_litehtml {
 
 using namespace litehtml;
 
-static Colour webColour (const web_color& c)
-{
-    return Colour (c.red, c.green, c.blue, c.alpha);
-}
-
-static String juceString (const tchar_t* s)
-{
-#ifdef LITEHTML_UTF8
-    return String::fromUTF8 (s);
-#else
-    return String (s);
-#endif
-}
-
-static String juceString (const tstring& s)
-{
-    return String (s.c_str());
-}
-
-static tstring to_tstring (const String& s)
-{
-#ifdef LITEHTML_UTF8
-    return s.toStdString();
-#else
-    return tstring (s.toWideCharPointer());
-#endif
-}
-
-//==============================================================================
-
 class Renderer final : public litehtml::document_container
 {
 public:
@@ -400,11 +370,13 @@ public:
         client.height = webView.getHeight();
     }
 
-    litehtml::element::ptr create_element (const tchar_t *tag_name,
-                                           const string_map &attributes,
+    litehtml::element::ptr create_element (const litehtml::tchar_t *tag_name,
+                                           const litehtml::string_map &attributes,
                                            const litehtml::document::ptr& doc) override
     {
-        // @todo Create element
+        if (auto* page { webView.getPage() })
+            return page->getContext().create_element (tag_name, attributes, doc);
+
         return nullptr;
     }
 

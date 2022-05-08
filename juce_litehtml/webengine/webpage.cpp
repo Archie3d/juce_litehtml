@@ -2,8 +2,7 @@ namespace juce_litehtml {
 
 struct WebPage::Impl
 {
-    WebLoader loader;
-    litehtml::context context;
+    WebContext context;
     litehtml::document::ptr document { nullptr };
     litehtml::document_container* renderer { nullptr };
     URL pageUrl;
@@ -13,13 +12,14 @@ struct WebPage::Impl
 
     Impl()
     {
-        context.load_master_stylesheet (master_css);
     }
 
     void loadFromURL (const URL& url)
     {
         if (renderer == nullptr)
             return;
+
+        auto& loader { context.getLoader() };
 
         const auto fixedUrl { loader.fixUpURL (url) };
         pageUrl = fixedUrl;
@@ -68,6 +68,11 @@ WebPage::WebPage()
 
 WebPage::~WebPage() = default;
 
+WebContext& WebPage::getContext()
+{
+    return d->context;
+}
+
 void WebPage::loadFromURL (const URL& url)
 {
     d->loadFromURL (url);
@@ -85,7 +90,7 @@ void WebPage::reload()
 
 void WebPage::followLink (const URL& url)
 {
-    const auto fixedURL { d->loader.fixUpURL (url) };
+    const auto fixedURL { d->context.getLoader().fixUpURL (url) };
     bool shouldFollow { true };
 
     if (d->client != nullptr)
@@ -95,6 +100,11 @@ void WebPage::followLink (const URL& url)
         d->loadFromURL (fixedURL);
 }
 
+URL WebPage::getURL() const
+{
+    return d->pageUrl;
+}
+
 litehtml::document::ptr WebPage::getDocument()
 {
     return d->document;
@@ -102,7 +112,7 @@ litehtml::document::ptr WebPage::getDocument()
 
 WebLoader& WebPage::getLoader()
 {
-    return d->loader;
+    return d->context.getLoader();
 }
 
 void WebPage::setClient (Client* client)

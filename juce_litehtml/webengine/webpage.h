@@ -51,6 +51,8 @@ public:
     WebPage();
     ~WebPage();
 
+    WebContext& getContext();
+
     /** Load document from URL.
 
         This method loads the page from given URL without
@@ -78,6 +80,8 @@ public:
         @see WebPage::Client
      */
     void followLink (const juce::URL& url);
+
+    juce::URL getURL() const;
 
     /** Returns the document handled by this page. */
     litehtml::document::ptr getDocument();

@@ -25,9 +25,26 @@
 #include <juce_data_structures/juce_data_structures.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 
+extern "C" {
+#  include "quickjs.h"
+#  include "quickjs-libc.h"
+}
+
+#ifndef LITEHTML_UTF8
+#  define LITEHTML_UTF8
+#endif
+
+#include "js/Value.h"
+#include "js/Runtime.h"
+#include "js/Context.h"
+#include "js/Object.h"
+
 #include "litehtml.h"
 
 #include "webengine/webloader.h"
+#include "webengine/webcontext.h"
 #include "webengine/webpage.h"
 #include "webengine/webview.h"
+
+#include "webengine/el_script.h"
 
