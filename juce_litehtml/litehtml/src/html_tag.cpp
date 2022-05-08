@@ -9,6 +9,8 @@
 #include "el_before_after.h"
 #include "num_cvt.h"
 
+JSClassID litehtml::html_tag::jsClassID = 0;
+
 litehtml::html_tag::html_tag(const std::shared_ptr<litehtml::document>& doc) : litehtml::element(doc)
 {
 	m_box_sizing			= box_sizing_content_box;
@@ -32,6 +34,11 @@ litehtml::html_tag::html_tag(const std::shared_ptr<litehtml::document>& doc) : l
 	m_border_spacing_x		= 0;
 	m_border_spacing_y		= 0;
 	m_border_collapse		= border_collapse_separate;
+}
+
+void litehtml::html_tag::register_js_prototype(JSContext* ctx, JSValue prototype)
+{
+	element::register_js_prototype(ctx, prototype);
 }
 
 bool litehtml::html_tag::appendChild(const element::ptr &el)

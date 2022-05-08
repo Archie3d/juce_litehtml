@@ -54,3 +54,5 @@ target_compile_definitions(litehtml
 )
 
 target_sources(litehtml PRIVATE ${src})
+
+target_link_libraries(litehtml PUBLIC quickjs)

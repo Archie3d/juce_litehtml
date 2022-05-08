@@ -4,6 +4,11 @@
 #include <memory>
 #include "stylesheet.h"
 #include "css_offsets.h"
+#include "context.h"
+
+extern "C" {
+#	include "quickjs.h"
+}
 
 namespace litehtml
 {
@@ -20,6 +25,21 @@ namespace litehtml
 		typedef std::shared_ptr<litehtml::element>			ptr;
 		typedef std::shared_ptr<const litehtml::element>	const_ptr;
 		typedef std::weak_ptr<litehtml::element>			weak_ptr;
+
+		struct element_js_object_ref : litehtml::js_object_ref
+		{
+			element::ptr element;
+
+			element_js_object_ref(element::ptr el)
+				: element { el }
+			{}
+
+			void release_js_object() override
+			{
+				element = nullptr;
+			}
+		};
+
 	protected:
 		std::weak_ptr<element>		m_parent;
 		std::weak_ptr<litehtml::document>	m_doc;
@@ -31,10 +51,19 @@ namespace litehtml
 		margins						m_borders;
 		bool						m_skip;
 
+		JSValue						m_jsValue;
+
 		virtual void select_all(const css_selector& selector, elements_vector& res);
+
 	public:
+		static JSClassID			jsClassID;
+
 		explicit element(const std::shared_ptr<litehtml::document>& doc);
-        virtual ~element() = default;
+        virtual ~element();
+
+		void init_js_value();
+
+		static void register_js_prototype(JSContext* ctx, JSValue prototype);
 
 		// returns refer to m_pos member;
 		position&					get_position();

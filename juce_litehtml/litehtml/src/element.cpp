@@ -5,10 +5,38 @@
 #define LITEHTML_EMPTY_FUNC			{}
 #define LITEHTML_RETURN_FUNC(ret)	{return ret;}
 
+JSClassID litehtml::element::jsClassID = 0;
+
 litehtml::element::element(const std::shared_ptr<litehtml::document>& doc) : m_doc(doc)
 {
 	m_box		= nullptr;
 	m_skip		= false;
+
+	m_jsValue 	= JS_UNINITIALIZED;
+}
+
+litehtml::element::~element()
+{
+	if (m_jsValue == JS_UNINITIALIZED)
+		return;
+
+	if (auto doc { m_doc.lock() })
+	{
+		JS_FreeValue (doc->context()->js_context(), m_jsValue);
+	}
+}
+
+void litehtml::element::init_js_value()
+{
+	if (auto doc { m_doc.lock() })
+	{
+		m_jsValue   = JS_NewObjectClass(doc->context()->js_context(), jsClassID);
+		JS_SetOpaque (m_jsValue, new element_js_object_ref(shared_from_this()));
+	}
+}
+
+void litehtml::element::register_js_prototype(JSContext* ctx, JSValue prototype)
+{
 }
 
 bool litehtml::element::is_point_inside( int x, int y )
@@ -66,9 +94,9 @@ litehtml::position litehtml::element::get_placement() const
 bool litehtml::element::is_inline_box() const
 {
 	style_display d = get_display();
-	if(	d == display_inline || 
+	if(	d == display_inline ||
 		d == display_inline_table ||
-		d == display_inline_block || 
+		d == display_inline_block ||
 		d == display_inline_text)
 	{
 		return true;

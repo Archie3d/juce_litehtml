@@ -61,8 +61,8 @@ namespace litehtml
 		int						m_line_height;
 		bool					m_lh_predefined;
 		string_vector			m_pseudo_classes;
-		used_selector::vector	m_used_styles;		
-		
+		used_selector::vector	m_used_styles;
+
 		uint_ptr				m_font;
 		int						m_font_size;
 		font_metrics			m_font_metrics;
@@ -98,7 +98,11 @@ namespace litehtml
 		void			select_all(const css_selector& selector, elements_vector& res) override;
 
 	public:
+		static JSClassID jsClassID;
+
 		explicit html_tag(const std::shared_ptr<litehtml::document>& doc);
+
+		static void register_js_prototype(JSContext* ctx, JSValue prototype);
 
 		/* render functions */
 
