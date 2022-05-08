@@ -30,7 +30,7 @@ namespace litehtml
 		margins						m_padding;
 		margins						m_borders;
 		bool						m_skip;
-		
+
 		virtual void select_all(const css_selector& selector, elements_vector& res);
 	public:
 		explicit element(const std::shared_ptr<litehtml::document>& doc);

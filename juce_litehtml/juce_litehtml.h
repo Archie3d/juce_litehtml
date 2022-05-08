@@ -43,6 +43,7 @@ extern "C" {
 
 #include "webengine/webloader.h"
 #include "webengine/webcontext.h"
+#include "webengine/webdom.h"
 #include "webengine/webpage.h"
 #include "webengine/webview.h"
 

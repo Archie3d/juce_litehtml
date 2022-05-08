@@ -7,6 +7,9 @@ WebContext::WebContext()
 {
     // Load default embedded stylesheet
     load_master_stylesheet (juce_litehtml_master_css);
+
+    jsContext.registerClass<WebDOM> ("Document");
+    jsContext.registerClass<WebDOM::Element> ("Element");
 }
 
 WebContext::~WebContext() = default;

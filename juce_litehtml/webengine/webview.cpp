@@ -463,7 +463,7 @@ struct WebView::Impl : public WebPage::ViewClient,
     WebView& self;
     Renderer renderer;
     WebPage* page { nullptr };
-    litehtml::document::ptr document { nullptr };
+    WebDOM::Ptr dom { nullptr };
 
     ScrollBar vScrollBar;
     ScrollBar hScrollBar;
@@ -505,14 +505,16 @@ struct WebView::Impl : public WebPage::ViewClient,
         {
             page->setViewClient (this);
             page->setRenderer (&renderer);
-            document = page->getDocument();
+            dom = page->getDOM();
         }
     }
 
     void render()
     {
-        if (document == nullptr)
+        if (dom == nullptr)
             return;
+
+        auto document { dom->getDocument() };
 
         const auto width { self.getWidth() };
         const auto height { self.getHeight() };
@@ -544,8 +546,10 @@ struct WebView::Impl : public WebPage::ViewClient,
         // @todo Get the colour from <body> style
         g.fillAll (Colours::white);
 
-        if (document == nullptr)
+        if (dom == nullptr)
             return;
+
+        auto document { dom->getDocument() };
 
         const auto width { vScrollBar.isVisible() ? self.getWidth() - vScrollBar.getWidth() : self.getWidth() };
         const auto height { hScrollBar.isVisible() ? self.getHeight() - hScrollBar.getHeight() : self.getHeight() };
@@ -558,7 +562,7 @@ struct WebView::Impl : public WebPage::ViewClient,
 
     void mouseMove(const MouseEvent& event)
     {
-        if (document == nullptr)
+        if (dom == nullptr)
             return;
 
         const int x { event.x + scrollX };
@@ -566,7 +570,7 @@ struct WebView::Impl : public WebPage::ViewClient,
 
         std::vector<litehtml::position> redrawBoxes;
 
-        auto currentDocument { document };
+        auto document { dom->getDocument() };
 
         if (document->on_mouse_over (x, y, x, y, redrawBoxes))
             renderAndPaint();
@@ -574,8 +578,10 @@ struct WebView::Impl : public WebPage::ViewClient,
 
     void mouseDown(const MouseEvent& event)
     {
-        if (document == nullptr)
+        if (dom == nullptr)
             return;
+
+        auto document { dom->getDocument() };
 
         const int x { event.x + scrollX };
         const int y { event.y + scrollY };
@@ -588,20 +594,17 @@ struct WebView::Impl : public WebPage::ViewClient,
 
     void mouseUp(const MouseEvent& event)
     {
-        if (document == nullptr)
+        if (dom == nullptr)
             return;
+
+        auto document { dom->getDocument() };
 
         const int x { event.x + scrollX };
         const int y { event.y + scrollY };
 
         std::vector<litehtml::position> redrawBoxes;
 
-        // @note Processing mouse up event on the document may cause its
-        //       reload. Here we capture the current document pointer
-        //       in order to preven it to be accidentally released.
-        auto currentDocument { document };
-
-        if (currentDocument->on_lbutton_up (x, y, x, y, redrawBoxes))
+        if (document->on_lbutton_up (x, y, x, y, redrawBoxes))
             renderAndPaint();
     }
 
@@ -630,8 +633,8 @@ struct WebView::Impl : public WebPage::ViewClient,
 
     void documentLoaded() override
     {
-        document = page->getDocument();
-        jassert (document != nullptr);
+        dom = page->getDOM();
+        jassert (dom != nullptr);
 
         // Reset the scroll position as a new document has been loaded
         scrollX = 0;

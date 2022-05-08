@@ -83,8 +83,8 @@ public:
 
     juce::URL getURL() const;
 
-    /** Returns the document handled by this page. */
-    litehtml::document::ptr getDocument();
+    /** Returns the document's model handled by this page. */
+    WebDOM::Ptr getDOM();
 
     /** Returns the loader used to load resources of this page. */
     WebLoader& getLoader();

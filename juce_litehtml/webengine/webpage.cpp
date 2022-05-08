@@ -3,7 +3,7 @@ namespace juce_litehtml {
 struct WebPage::Impl
 {
     WebContext context;
-    litehtml::document::ptr document { nullptr };
+    WebDOM::Ptr dom { nullptr };
     litehtml::document_container* renderer { nullptr };
     URL pageUrl;
 
@@ -47,7 +47,8 @@ struct WebPage::Impl
         if (viewClient != nullptr)
             viewClient->documentAboutToBeReloaded();
 
-        document = litehtml::document::createFromUTF8 (html.toRawUTF8(), renderer, &context);
+        auto doc { litehtml::document::createFromUTF8 (html.toRawUTF8(), renderer, &context) };
+        dom = std::make_shared<WebDOM>(context, doc);
 
         if (viewClient != nullptr)
             viewClient->documentLoaded();
@@ -105,9 +106,9 @@ URL WebPage::getURL() const
     return d->pageUrl;
 }
 
-litehtml::document::ptr WebPage::getDocument()
+WebDOM::Ptr WebPage::getDOM()
 {
-    return d->document;
+    return d->dom;
 }
 
 WebLoader& WebPage::getLoader()
