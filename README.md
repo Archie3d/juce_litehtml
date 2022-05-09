@@ -3,7 +3,7 @@ This is a JUCE module that provides integration of the [litehtml](https://github
 
 ![screenshot](doc/screenshot.png)
 
-The web pages can be loaded from network (via http or https), but also locally, from a file or JUCE application binary resources.
+The web pages can be loaded from network (via `http://` or `https://`), but also locally, from a file (using `file://` scheme) or JUCE application or plugin binary resources (`res://` scheme).
 
 This module also attempts to add JavaScript support on top of the litehtml using [quickjs](https://github.com/bellard/quickjs) interpreter.
 
