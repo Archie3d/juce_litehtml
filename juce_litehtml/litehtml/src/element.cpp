@@ -34,8 +34,20 @@ void litehtml::element::init_js_value()
 	}
 }
 
+static JSValue js_tagName(JSContext* ctx, JSValueConst self)
+{
+	if (auto* ref { litehtml::context::js_get_object_ref<litehtml::element>(self) })
+	{
+		if (auto element { ref->element.lock()})
+			return JS_NewString(ctx, element->get_tagName());
+	}
+
+	return JS_UNDEFINED;
+}
+
 void litehtml::element::register_js_prototype(JSContext* ctx, JSValue prototype)
 {
+	litehtml::context::js_register_property(ctx, prototype, "tagName", js_tagName);
 }
 
 bool litehtml::element::is_point_inside( int x, int y )

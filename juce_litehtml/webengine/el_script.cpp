@@ -10,6 +10,7 @@ el_script::el_script (const litehtml::document::ptr& doc)
 void el_script::setScript (const String& s)
 {
     script = s;
+    //context->eval(to_tstring(script));
 }
 
 void el_script::parse_attributes()
