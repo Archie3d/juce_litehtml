@@ -100,10 +100,10 @@ public:
                 case list_style_type_none:
                     break;
                 case list_style_type_circle:
-                    g->fillEllipse (pos.x, pos.y, pos.width, pos.height);
+                    g->drawEllipse (pos.x, pos.y, pos.width, pos.height, 1.0f);
                     break;
                 case list_style_type_disc:
-                    g->drawEllipse (pos.x, pos.y, pos.width, pos.height, 1.0f);
+                    g->fillEllipse (pos.x, pos.y, pos.width, pos.height);
                     break;
                 case list_style_type_square:
                     g->fillRect (pos.x, pos.y, pos.width, pos.height);
@@ -623,8 +623,11 @@ struct WebView::Impl : public WebPage::ViewClient,
 
     void mouseWheelMove (const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel)
     {
-        vScrollBar.mouseWheelMove (event, wheel);
-        hScrollBar.mouseWheelMove (event, wheel);
+        if (vScrollBar.isVisible())
+            vScrollBar.mouseWheelMove (event, wheel);
+
+        if (hScrollBar.isVisible())
+            hScrollBar.mouseWheelMove (event, wheel);
     }
 
     void renderAndPaint()

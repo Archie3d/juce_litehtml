@@ -34,12 +34,78 @@ void litehtml::element::init_js_value()
 	}
 }
 
-static JSValue js_tagName(JSContext* ctx, JSValueConst self)
+//----------------------------------------------------------
+// JavaScript interface methods
+
+static litehtml::element::ptr js_get_element(JSContext* ctx, JSValueConst self)
 {
 	if (auto* ref { litehtml::context::js_get_object_ref<litehtml::element>(self) })
+		return ref->element.lock();
+
+	return nullptr;
+}
+
+static JSValue js_getTagName(JSContext* ctx, JSValueConst self)
+{
+	if (auto element { js_get_element(ctx, self) })
+		return JS_NewString(ctx, element->get_tagName());
+
+	return JS_UNDEFINED;
+}
+
+static JSValue js_getId(JSContext* ctx, JSValueConst self)
+{
+	if (auto element { js_get_element(ctx, self) })
 	{
-		if (auto element { ref->element.lock()})
-			return JS_NewString(ctx, element->get_tagName());
+		if (const auto* id { element->get_attr("id") })
+			return JS_NewString(ctx, id);
+	}
+
+	return JS_UNDEFINED;
+}
+
+static JSValue js_setId(JSContext* ctx, JSValueConst self, JSValueConst val)
+{
+	if (auto element { js_get_element(ctx, self) })
+	{
+		const auto* str { JS_ToCString(ctx, val) };
+		element->set_attr("id", str);
+		JS_FreeCString(ctx, str);
+	}
+
+	return JS_UNDEFINED;
+}
+
+static JSValue js_getAttribute(JSContext* ctx, JSValueConst self, int argc, JSValueConst* args)
+{
+	if (argc != 1)
+		return JS_UNDEFINED;
+
+	if (auto element { js_get_element(ctx, self) })
+	{
+		const auto* attrName { JS_ToCString(ctx, args[0]) };
+		const auto* attrVal { element->get_attr(attrName) };
+		JS_FreeCString(ctx, attrName);
+
+		if (attrVal != nullptr)
+			return JS_NewString(ctx, attrVal);
+	}
+
+	return JS_UNDEFINED;
+}
+
+static JSValue js_setAttribute(JSContext* ctx, JSValueConst self, int argc, JSValueConst* args)
+{
+	if (argc != 2)
+		return JS_EXCEPTION;
+
+	if (auto element { js_get_element(ctx, self) })
+	{
+		const auto* attrName { JS_ToCString(ctx, args[0]) };
+		const auto* attrVal { JS_ToCString(ctx, args[1]) };
+		element->set_attr(attrName, attrVal);
+		JS_FreeCString(ctx, attrVal);
+		JS_FreeCString(ctx, attrName);
 	}
 
 	return JS_UNDEFINED;
@@ -47,8 +113,14 @@ static JSValue js_tagName(JSContext* ctx, JSValueConst self)
 
 void litehtml::element::register_js_prototype(JSContext* ctx, JSValue prototype)
 {
-	litehtml::context::js_register_property(ctx, prototype, "tagName", js_tagName);
+	litehtml::context::js_register_property(ctx, prototype, "tagName", js_getTagName);
+	litehtml::context::js_register_property(ctx, prototype, "id", js_getId, js_setId);
+
+	litehtml::context::js_register_method(ctx, prototype, "getAttribute", js_getAttribute);
+	litehtml::context::js_register_method(ctx, prototype, "setAttribute", js_setAttribute);
 }
+
+//----------------------------------------------------------
 
 bool litehtml::element::is_point_inside( int x, int y )
 {

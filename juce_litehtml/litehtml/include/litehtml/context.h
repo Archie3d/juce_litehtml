@@ -48,6 +48,7 @@ namespace litehtml
 			JS_SetClassProto(m_jsContext, T::jsClassID, proto);
 		}
 
+		/** Returns inner reference object. */
 		template<class T>
 		static typename T::js_object_ref* js_get_object_ref(JSValue obj)
 		{
