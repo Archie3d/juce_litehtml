@@ -24,7 +24,6 @@ add_subdirectory(juce_litehtml)
 target_link_libraries(${TARGET}
     PRIVATE
         juce::juce_core
-        juce::juce_core
         juce::juce_data_structures
         juce::juce_gui_basics
 
