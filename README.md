@@ -7,6 +7,10 @@ The web pages can be loaded from network (via http or https), but also locally, 
 
 This module also attempts to add JavaScript support on top of the litehtml using [quickjs](https://github.com/bellard/quickjs) interpreter.
 
+Litehtml offers rather limited capabilities, but it is good enough to render rich documents, which can be useful, for example, to show help pages or documentation within JUCE applications or plugins.
+
+> This project is WIP.
+
 ## Compilation
 
 This module must be used via CMake (cannot be used from Projuces because of additional targets that need to be compiled).
