@@ -81,8 +81,58 @@ static JSValue js_createElement(JSContext* ctx, JSValueConst self, int argc, JSV
 		if (element != nullptr)
 		{
 			document->stash_element(element);
-			return element->js_value();
+			return JS_DupValue(ctx, element->js_value());
 		}
+	}
+
+	return JS_NULL;
+}
+
+static JSValue js_createTextNode(JSContext* ctx, JSValueConst self, int argc, JSValueConst* args)
+{
+	if (argc > 1)
+		return JS_EXCEPTION;
+
+	if (auto document { js_get_document(ctx, self) })
+	{
+		litehtml::tchar_t* text { nullptr };
+		litehtml::element::ptr textNode { nullptr };
+
+		if (argc > 0)
+		{
+			const auto* text { JS_ToCString(ctx, args[0]) };
+			textNode = std::make_shared<litehtml::el_text>(text, document);
+			JS_FreeCString(ctx, text);
+		}
+		else
+		{
+			textNode = std::make_shared<litehtml::el_text>("", document);
+		}
+
+		document->stash_element(textNode);
+		return JS_DupValue(ctx, textNode->js_value());
+	}
+
+	return JS_NULL;
+}
+
+static JSValue js_getElementById(JSContext* ctx, JSValueConst self, int argc, JSValueConst* args)
+{
+	if (argc != 1)
+		return JS_EXCEPTION;
+
+	if (auto document { js_get_document(ctx, self) })
+	{
+		litehtml::element::ptr element { nullptr };
+		const auto* id { JS_ToCString(ctx, args[0]) };
+
+		if (document->root())
+			element = document->root()->select_one("#" + litehtml::tstring(id));
+
+		JS_FreeCString(ctx, id);
+
+		if (element != nullptr)
+			return JS_DupValue(ctx, element->js_value());
 	}
 
 	return JS_NULL;
@@ -91,6 +141,8 @@ static JSValue js_createElement(JSContext* ctx, JSValueConst self, int argc, JSV
 void litehtml::document::register_js_prototype(JSContext* ctx, JSValue prototype)
 {
 	litehtml::context::js_register_method(ctx, prototype, "createElement", js_createElement);
+	litehtml::context::js_register_method(ctx, prototype, "createTextNode", js_createTextNode);
+	litehtml::context::js_register_method(ctx, prototype, "getElementById", js_getElementById);
 }
 
 //----------------------------------------------------------
