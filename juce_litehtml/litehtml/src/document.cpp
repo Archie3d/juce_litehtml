@@ -56,10 +56,44 @@ litehtml::document::~document()
 	}
 }
 
+//----------------------------------------------------------
+// JavaScript interface methods
+
+static litehtml::document::ptr js_get_document(JSContext* ctx, JSValueConst self)
+{
+	if (auto* ref { litehtml::context::js_get_object_ref<litehtml::document>(self) })
+		return ref->document->shared_from_this();
+
+	return nullptr;
+}
+
+static JSValue js_createElement(JSContext* ctx, JSValueConst self, int argc, JSValueConst* args)
+{
+	if (argc != 1)
+		return JS_UNDEFINED;
+
+	if (auto document { js_get_document(ctx, self) })
+	{
+		const auto* tagName { JS_ToCString(ctx, args[0]) };
+		auto element { document->create_element(tagName, {}) };
+		JS_FreeCString(ctx, tagName);
+
+		if (element != nullptr)
+		{
+			document->stash_element(element);
+			return element->js_value();
+		}
+	}
+
+	return JS_NULL;
+}
+
 void litehtml::document::register_js_prototype(JSContext* ctx, JSValue prototype)
 {
-
+	litehtml::context::js_register_method(ctx, prototype, "createElement", js_createElement);
 }
+
+//----------------------------------------------------------
 
 litehtml::document::ptr litehtml::document::createFromString( const tchar_t* str, litehtml::document_container* objPainter, litehtml::context* ctx, litehtml::css* user_styles)
 {
@@ -987,5 +1021,23 @@ void litehtml::document::append_children_from_utf8(element& parent, const char* 
 
 		// Fanaly initialize elements
 		child->init();
+	}
+}
+
+void litehtml::document::stash_element(litehtml::element::ptr el)
+{
+	m_stashed_elements.push_back(std::move(el));
+}
+
+void litehtml::document::remove_from_stash(litehtml::element::ptr el)
+{
+	auto it = m_stashed_elements.begin();
+
+	while (it != m_stashed_elements.end())
+	{
+		if (it->get() == el.get())
+			it = m_stashed_elements.erase(it);
+		else
+			++it;
 	}
 }

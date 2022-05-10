@@ -44,10 +44,10 @@ namespace litehtml
 
 		struct js_object_ref
 		{
-			document* doc { nullptr };
+			litehtml::document* document { nullptr };
 
-			js_object_ref(document* d)
-				: doc { d }
+			js_object_ref(litehtml::document* d)
+				: document { d }
 			{}
 		};
 
@@ -72,12 +72,15 @@ namespace litehtml
 
 		JSValue								m_jsValue;
 
+		std::vector<litehtml::element::ptr> m_stashed_elements;
+
 	public:
 		document(litehtml::document_container* objContainer, litehtml::context* ctx);
 		virtual ~document();
 
 		litehtml::document_container*	container()	{ return m_container; }
 		litehtml::context*			    context() { return m_context; }
+		JSValue&						js_value() { return m_jsValue; }
 		litehtml::css&					get_styles() { return m_styles; }
 		uint_ptr						get_font(const tchar_t* name, int size, const tchar_t* weight, const tchar_t* style, const tchar_t* decoration, font_metrics* fm);
 		int								render(int max_width, render_type rt = render_all);
@@ -105,6 +108,9 @@ namespace litehtml
 
 		void                            append_children_from_string(element& parent, const tchar_t* str);
 		void                            append_children_from_utf8(element& parent, const char* str);
+
+		void							stash_element(litehtml::element::ptr el);
+		void							remove_from_stash(litehtml::element::ptr el);
 
 		static litehtml::document::ptr createFromString(const tchar_t* str, litehtml::document_container* objPainter, litehtml::context* ctx, litehtml::css* user_styles = nullptr);
 		static litehtml::document::ptr createFromUTF8(const char* str, litehtml::document_container* objPainter, litehtml::context* ctx, litehtml::css* user_styles = nullptr);

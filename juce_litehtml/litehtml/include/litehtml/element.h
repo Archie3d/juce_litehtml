@@ -26,14 +26,14 @@ namespace litehtml
 		typedef std::shared_ptr<const litehtml::element>	const_ptr;
 		typedef std::weak_ptr<litehtml::element>			weak_ptr;
 
-		struct js_object_ref
+		struct js_object_ref final
 		{
 			element::weak_ptr element {};
-
-			js_object_ref(element::ptr el)
-				: element { el }
-			{}
+			js_object_ref(element::ptr el);
+			~js_object_ref();
 		};
+
+		JSValue& js_value() { return m_jsValue; }
 
 	protected:
 		std::weak_ptr<element>		m_parent;

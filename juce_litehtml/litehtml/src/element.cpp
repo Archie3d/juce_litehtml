@@ -7,6 +7,18 @@
 
 JSClassID litehtml::element::jsClassID = 0;
 
+litehtml::element::js_object_ref::js_object_ref(element::ptr el)
+	: element { el }
+{}
+
+litehtml::element::js_object_ref::~js_object_ref()
+{
+	if (auto el { element.lock() })
+		el->get_document()->remove_from_stash(el);
+}
+
+//==============================================================================
+
 litehtml::element::element(const std::shared_ptr<litehtml::document>& doc) : m_doc(doc)
 {
 	m_box		= nullptr;
@@ -111,13 +123,70 @@ static JSValue js_setAttribute(JSContext* ctx, JSValueConst self, int argc, JSVa
 	return JS_UNDEFINED;
 }
 
+static JSValue js_getChildren(JSContext* ctx, JSValueConst self)
+{
+	if (auto element { js_get_element(ctx, self) })
+	{
+		auto jsArr { JS_NewArray (ctx) };
+
+		for (size_t i = 0; i < element->get_children_count(); ++i)
+		{
+			auto child { element->get_child(i) };
+
+			if (!child->is_comment())
+				JS_SetPropertyUint32 (ctx, jsArr, i, JS_DupValue(ctx, child->js_value()));
+		}
+
+		return jsArr;
+	}
+
+	return JS_UNDEFINED;
+}
+
+static JSValue js_appendChild(JSContext* ctx, JSValueConst self, int argc, JSValueConst* args)
+{
+	if (argc != 1)
+		return JS_EXCEPTION;
+
+	if (auto element { js_get_element(ctx, self) })
+	{
+		if (auto elementToAppend { js_get_element(ctx, args[0]) })
+		{
+			element->appendChild(elementToAppend);
+			elementToAppend->get_document()->remove_from_stash(elementToAppend);
+		}
+	}
+
+	return JS_UNDEFINED;
+}
+
+static JSValue js_removeChild(JSContext* ctx, JSValueConst self, int argc, JSValueConst* args)
+{
+	if (argc != 1)
+		return JS_EXCEPTION;
+
+	if (auto element { js_get_element(ctx, self) })
+	{
+		if (auto elementToBeRemoved { js_get_element(ctx, args[0]) })
+		{
+			if (element->removeChild(elementToBeRemoved))
+				element->get_document()->stash_element(elementToBeRemoved);
+		}
+	}
+
+	return JS_UNDEFINED;
+}
+
 void litehtml::element::register_js_prototype(JSContext* ctx, JSValue prototype)
 {
 	litehtml::context::js_register_property(ctx, prototype, "tagName", js_getTagName);
 	litehtml::context::js_register_property(ctx, prototype, "id", js_getId, js_setId);
+	litehtml::context::js_register_property(ctx, prototype, "children", js_getChildren);
 
 	litehtml::context::js_register_method(ctx, prototype, "getAttribute", js_getAttribute);
 	litehtml::context::js_register_method(ctx, prototype, "setAttribute", js_setAttribute);
+	litehtml::context::js_register_method(ctx, prototype, "appendChild", js_appendChild);
+	litehtml::context::js_register_method(ctx, prototype, "removeChild", js_removeChild);
 }
 
 //----------------------------------------------------------
