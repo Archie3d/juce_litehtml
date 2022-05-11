@@ -17,6 +17,9 @@ void el_script::parse_attributes()
 {
     if (const auto* src { get_attr ("src") })
     {
+        document::ptr doc = get_document();
+		    doc->container()->load_script(src);
+
         auto& loader { context->getLoader() };
         const URL url (juceString (src));
 

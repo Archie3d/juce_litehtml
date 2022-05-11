@@ -10,7 +10,10 @@ litehtml::el_script::el_script(const std::shared_ptr<litehtml::document>& doc) :
 
 void litehtml::el_script::parse_attributes()
 {
-	//TODO: pass script text to document container
+	document::ptr doc = get_document();
+
+	if (const tchar_t* src = get_attr(_t("src")))
+		doc->container()->load_script(src);
 }
 
 bool litehtml::el_script::appendChild(const ptr &el)

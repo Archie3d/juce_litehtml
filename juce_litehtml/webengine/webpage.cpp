@@ -7,6 +7,9 @@ struct WebPage::Impl
     litehtml::document_container* renderer { nullptr };
     URL pageUrl;
 
+    // List of page resources to be loaded
+    std::vector<URL> resources;
+
     WebPage::ViewClient* viewClient { nullptr };
     WebPage::Client* client { nullptr };
 
@@ -41,6 +44,8 @@ struct WebPage::Impl
 
     void loadFromHTML (const String& html)
     {
+        resources.clear();
+
         if (renderer == nullptr)
             return;
 
@@ -128,6 +133,11 @@ WebPage::Client* WebPage::getClient()
 void WebPage::setRenderer (litehtml::document_container* renderer)
 {
     d->renderer = renderer;
+}
+
+void WebPage::addResourceToLoad(const juce::URL& url)
+{
+    d->resources.push_back(url);
 }
 
 void WebPage::setViewClient (ViewClient* view)

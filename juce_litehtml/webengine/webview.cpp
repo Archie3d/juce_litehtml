@@ -117,6 +117,8 @@ public:
 
     void load_image (const tchar_t* src, const tchar_t* baseurl, bool redraw_on_ready) override
     {
+        webView.getPage()->addResourceToLoad(juceString(src));
+
         if (auto* loader { getLoader() })
         {
             const URL url (juceString (src));
@@ -128,8 +130,10 @@ public:
                     imageSizeCache[url.toString (true).hash()] = { image.getWidth(), image.getHeight() };
 
                     if (redraw_on_ready)
+                    {
                         webView.resized();
                         webView.repaint();
+                    }
                 }
             });
         }
@@ -330,8 +334,10 @@ public:
     #endif
     }
 
-    void import_css (tstring &text, const tstring &tsurl, tstring &baseurl) override
+    void import_css (tstring& text, const tstring& tsurl, tstring& baseurl) override
     {
+        webView.getPage()->addResourceToLoad (juceString(tsurl));
+
         if (auto* loader { getLoader() })
         {
             const URL url (juceString (tsurl));
@@ -339,6 +345,11 @@ public:
 
             text = to_tstring (content);
         }
+    }
+
+    void load_script(const tstring& tsurl) override
+    {
+        webView.getPage()->addResourceToLoad (juceString (tsurl));
     }
 
     void set_clip (litehtml::uint_ptr hdc, const position &pos, const border_radiuses &bdr_radius, bool valid_x, bool valid_y) override
