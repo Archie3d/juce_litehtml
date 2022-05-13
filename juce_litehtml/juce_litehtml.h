@@ -34,11 +34,6 @@ extern "C" {
 #  define LITEHTML_UTF8
 #endif
 
-#include "js/Value.h"
-#include "js/Runtime.h"
-#include "js/Context.h"
-#include "js/Object.h"
-
 #include "litehtml.h"
 
 #include "webengine/webloader.h"

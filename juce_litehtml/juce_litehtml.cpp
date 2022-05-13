@@ -6,11 +6,6 @@
 
 using namespace juce;
 
-#include "js/Value.cpp"
-#include "js/Runtime.cpp"
-#include "js/Context.cpp"
-#include "js/Object.cpp"
-
 #include "webengine/master_css.cpp"
 
 #include "webengine/utils.cpp"
