@@ -19,6 +19,8 @@ litehtml::element::ptr WebContext::create_element (const litehtml::tchar_t* tag_
 
     if (tag == "script")
         element = std::make_shared<el_script>(doc);
+    else if (tag == "input")
+        element = std::make_shared<el_input>(doc);
 
     return element;
 }

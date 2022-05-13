@@ -143,6 +143,9 @@ void WebPage::addResourceToLoad(const juce::URL& url)
 void WebPage::setViewClient (ViewClient* view)
 {
     d->viewClient = view;
+
+    if (view != nullptr)
+        d->context.setView (view->getView());
 }
 
 } // namespace juce_litehtml

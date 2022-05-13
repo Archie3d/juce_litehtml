@@ -12,8 +12,8 @@ using namespace juce;
 
 #include "webengine/webloader.cpp"
 #include "webengine/webcontext.cpp"
-//#include "webengine/webdom.cpp"
 #include "webengine/webpage.cpp"
 #include "webengine/webview.cpp"
 
 #include "webengine/el_script.cpp"
+#include "webengine/el_input.cpp"

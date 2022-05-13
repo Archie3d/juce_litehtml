@@ -670,6 +670,11 @@ struct WebView::Impl : public WebPage::ViewClient,
         renderAndPaint();
     }
 
+    WebView* getView() override
+    {
+        return &self;
+    }
+
     // ScrollBar::Listener
     void scrollBarMoved (ScrollBar* scrollBar, double newRangeStart) override
     {

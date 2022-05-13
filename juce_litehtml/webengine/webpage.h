@@ -123,6 +123,7 @@ private:
         virtual ~ViewClient() = default;
         virtual void documentAboutToBeReloaded() = 0;
         virtual void documentLoaded() = 0;
+        virtual WebView* getView() = 0;
     };
 
     void setViewClient (ViewClient* view);

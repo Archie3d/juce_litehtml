@@ -1,5 +1,7 @@
 namespace juce_litehtml {
 
+class WebView;
+
 /** Web context.
 
     This class assembles the loader and the
@@ -18,6 +20,9 @@ public:
     /** Returns the loader. */
     WebLoader& getLoader() { return loader; }
 
+    void setView (WebView* vc) { view = vc; }
+    WebView* getView() { return view; }
+
     /** Litehtml elements factory.
 
         This method is called by the document when creating
@@ -32,6 +37,7 @@ private:
 
     WebLoader loader;
 
+    WebView* view { nullptr };
 };
 
 } // namespace juce_litehtml
