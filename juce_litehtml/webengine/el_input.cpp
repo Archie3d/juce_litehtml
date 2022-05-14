@@ -10,35 +10,53 @@ void el_input::parse_attributes()
     DBG("<input>");
     for (auto&& [key, value] : m_attrs)
     {
-        DBG("    " << String(key) << " = " << String(value));
+        DBG("    '" << String(key) << "' = '" << String(value) << "'");
     }
+
+    const String type { get_attr("type") };
+
+    if (type == "text" || type == "search")
+    {
+        textEditor = std::make_unique<TextEditor>();
+        textEditor->setText(get_attr("value"));
+        component = textEditor.get();
+    }
+    else if (type == "submit")
+    {
+        //textButton = std::make_unique<TextButton>(get_attr("value", "Submit"));
+        //component = textButton.get();
+    }
+    else if (type == "checkbox")
+    {
+        toggleButton = std::make_unique<ToggleButton>(get_attr("value"));
+        component = toggleButton.get();
+    }
+
+    if (component != nullptr)
+    {
+        if (auto* ctx { dynamic_cast<WebContext*>(get_document()->context()) })
+        {
+            if (auto* view { ctx->getView() })
+                view->addAndMakeVisible(component);
+        }
+    }
+
 }
 
 int el_input::render (int x, int y, int max_width, bool second_pass)
 {
-    if (textEditor == nullptr)
-    {
-        textEditor = std::make_unique<TextEditor>();
-
-        if (auto* ctx { dynamic_cast<WebContext*>(get_document()->context()) })
-        {
-            if (auto* view { ctx->getView() })
-                view->addAndMakeVisible(textEditor.get());
-        }
-    }
-
     return html_tag::render(x, y, max_width, second_pass);
 }
 
 void el_input::draw (litehtml::uint_ptr hdc, int x, int y, const litehtml::position* clip)
 {
-    if (textEditor != nullptr)
+    if (component != nullptr)
     {
         position pos { m_pos };
         pos.x += x;
         pos.y += y;
 
-        textEditor->setBounds(pos.x, pos.y, pos.width, pos.height);
+        component->setBounds(pos.x, pos.y, pos.width, pos.height);
     }
 }
 
