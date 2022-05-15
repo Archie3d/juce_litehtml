@@ -174,6 +174,28 @@ struct WebPage::Impl
 
     void loadFromHTML (const String& html)
     {
+        if (renderer == nullptr)
+            return;
+
+        if (viewClient != nullptr)
+            viewClient->documentAboutToBeReloaded();
+
+        document = litehtml::document::createFromUTF8 (html.toRawUTF8(), renderer, &context);
+
+        if (viewClient != nullptr)
+            viewClient->documentLoaded();
+
+    }
+
+    /** Two steps loading.
+
+        This will load the document in two steps:
+        The first will scan the document for the resources (images, stylesheets, etc.).
+        And then in the second step the document will be reloaded
+        assuming the resources have been aready cached.
+     */
+    void preloadFromHTML (const String& html)
+    {
         if (viewClient != nullptr)
             viewClient->documentAboutToBeReloaded();
 
@@ -199,7 +221,7 @@ struct WebPage::Impl
 
 private:
 
-    /** Reload the document.
+    /** Reload the document (2nd step).
 
         This assumes that the document referenced content (images, styles, scripts)
         has been already preloaded/cached so can be efficiently delivered now.
