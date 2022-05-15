@@ -30,7 +30,7 @@ public:
     void draw_borders (uint_ptr, const borders&, const position&, bool) override {}
     void set_caption (const tchar_t*) override {}
 
-    void set_base_url (const tchar_t* base_url)
+    void set_base_url (const tchar_t* base_url) override
     {
         // @todo
     }
