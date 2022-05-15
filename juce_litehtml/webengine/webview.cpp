@@ -117,8 +117,6 @@ public:
 
     void load_image (const tchar_t* src, const tchar_t* baseurl, bool redraw_on_ready) override
     {
-        webView.getPage()->addResourceToLoad(juceString(src));
-
         if (auto* loader { getLoader() })
         {
             const URL url (juceString (src));
@@ -336,8 +334,6 @@ public:
 
     void import_css (tstring& text, const tstring& tsurl, tstring& baseurl) override
     {
-        webView.getPage()->addResourceToLoad (juceString(tsurl));
-
         if (auto* loader { getLoader() })
         {
             const URL url (juceString (tsurl));
@@ -347,9 +343,15 @@ public:
         }
     }
 
-    void load_script(const tstring& tsurl) override
+    void import_script (tstring& text, const tstring& tsurl) override
     {
-        webView.getPage()->addResourceToLoad (juceString (tsurl));
+        if (auto* loader { getLoader() })
+        {
+            const URL url (juceString (tsurl));
+            const String content { loader->loadTextSync (url) };
+
+            text = to_tstring (content);
+        }
     }
 
     void set_clip (litehtml::uint_ptr hdc, const position &pos, const border_radiuses &bdr_radius, bool valid_x, bool valid_y) override

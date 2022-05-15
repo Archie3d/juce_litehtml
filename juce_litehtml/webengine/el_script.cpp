@@ -18,21 +18,12 @@ void el_script::parse_attributes()
     if (const auto* src { get_attr ("src") })
     {
         document::ptr doc = get_document();
-		    doc->container()->load_script(src);
 
-        auto& loader { context->getLoader() };
-        const URL url (juceString (src));
+        litehtml::tstring script;
+        doc->container()->import_script (script, src);
 
-        loader.loadAsync<String>(url, [self = std::weak_ptr<litehtml::element>(shared_from_this())](bool ok, const String& content) {
-            if (ok)
-            {
-                if (auto el { self.lock() })
-                {
-                    if (auto* el_this { dynamic_cast<juce_litehtml::el_script*>(el.get()) })
-                        el_this->setScript (content);
-                }
-            }
-        });
+        if (!script.empty())
+            setScript (juceString (script));
     }
 }
 

@@ -13,7 +13,11 @@ void litehtml::el_script::parse_attributes()
 	document::ptr doc = get_document();
 
 	if (const tchar_t* src = get_attr(_t("src")))
-		doc->container()->load_script(src);
+	{
+		tstring script;
+
+		doc->container()->import_script(script, src);
+	}
 }
 
 bool litehtml::el_script::appendChild(const ptr &el)

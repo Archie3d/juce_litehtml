@@ -102,9 +102,6 @@ public:
     /** Returns currently assigned client. */
     Client* getClient();
 
-    /** Callback method invoked on page load. */
-    void addResourceToLoad(const juce::URL& url);
-
 private:
 
     friend class WebView;
